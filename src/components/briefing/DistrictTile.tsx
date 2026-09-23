@@ -23,11 +23,11 @@ const GROUPS: [Direction, Indicator[]][] = [
   ["service", ["C1", "C2"]],
 ];
 
-// D bands from docs/plan.md §8: tile tint follows the district score.
+// D bands from docs/plan.md §8: the band marker follows the district score.
 function toneOf(d: number) {
-  if (d < 50) return { border: "border-l-outcome-return", text: "text-outcome-return", label: "отстаёт" };
-  if (d < 58) return { border: "border-l-outcome-conditions", text: "text-outcome-conditions", label: "в среднем" };
-  return { border: "border-l-outcome-approve", text: "text-outcome-approve", label: "благополучно" };
+  if (d < 50) return { dot: "bg-outcome-return", text: "text-outcome-return", label: "отстаёт" };
+  if (d < 58) return { dot: "bg-outcome-conditions", text: "text-outcome-conditions", label: "в среднем" };
+  return { dot: "bg-outcome-approve", text: "text-outcome-approve", label: "благополучно" };
 }
 
 function IndicatorRow({ code, value }: { code: Indicator; value: number }) {
@@ -55,9 +55,8 @@ export function DistrictTile({ district, score, weakest = false }: DistrictTileP
   return (
     <article
       className={cn(
-        "flex flex-col gap-3 rounded-lg border border-l-[3px] border-border bg-card p-4",
-        tone.border,
-        weakest && "ring-1 ring-outcome-return/40",
+        "flex flex-col gap-3 rounded-lg border bg-card p-4",
+        weakest ? "border-outcome-return/50" : "border-border",
       )}
     >
       <header className="flex items-start justify-between gap-2">
@@ -67,7 +66,8 @@ export function DistrictTile({ district, score, weakest = false }: DistrictTileP
         </div>
         <div className="text-right">
           <p className="font-display text-2xl leading-none font-semibold tabular-nums">{formatScore(score)}</p>
-          <p className={cn("mt-1 font-mono text-[0.65rem] tracking-wider uppercase", tone.text)}>
+          <p className={cn("mt-1.5 flex items-center justify-end gap-1.5 text-xs", tone.text)}>
+            <span aria-hidden="true" className={cn("size-2 rounded-[2px]", tone.dot)} />
             {weakest ? "слабейший" : tone.label}
           </p>
         </div>
@@ -76,7 +76,7 @@ export function DistrictTile({ district, score, weakest = false }: DistrictTileP
       <div className="flex flex-col gap-2">
         {GROUPS.map(([dir, codes]) => (
           <div key={dir} className="flex flex-col gap-1">
-            <p className="text-[0.65rem] tracking-wide text-muted-foreground uppercase">{DIRECTION_LABELS[dir]}</p>
+            <p className="text-xs text-muted-foreground">{DIRECTION_LABELS[dir]}</p>
             {codes.map((k) => (
               <IndicatorRow key={k} code={k} value={district.indicators[k]} />
             ))}
