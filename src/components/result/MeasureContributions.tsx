@@ -21,7 +21,12 @@ export function MeasureContributions({ contributions, decisions }: MeasureContri
     <ul className="flex flex-col gap-2">
       {rows.map((r) => (
         <li key={r.measureId} className="grid grid-cols-[14rem_7rem_1fr_4rem] items-center gap-3 text-sm">
-          <span className="first-letter:uppercase">{MEASURE_SHORT[r.measureId as MeasureId]}</span>
+          <span>
+            <span className="first-letter:uppercase">{MEASURE_SHORT[r.measureId as MeasureId]}</span>{" "}
+            <span className="font-mono text-xs text-muted-foreground" title="Код меры в датасете">
+              {r.measureId}
+            </span>
+          </span>
           <span className="text-muted-foreground">{placeOf(r.measureId)}</span>
           <span className="h-1.5 rounded-full bg-muted">
             <span

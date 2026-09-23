@@ -44,7 +44,7 @@ describe("cabinet summary", () => {
   it("names measures by title in errors and hints only against the current set", () => {
     const s = summarizeSet([{ measureId: "M1", districtId: "esil" }, { measureId: "M3", districtId: "nura" }]);
     expect(s.errors.map((e) => e.message)).toContain(
-      "«Выделенные полосы для автобусов» и «Линия ЛРТ / расширение» несовместимы: Либо BRT, либо ЛРТ, в любом районе",
+      "«Автобусные полосы» и «линия ЛРТ» несовместимы: Либо BRT, либо ЛРТ, в любом районе",
     );
     expect(relationHints("M10", [])).toEqual([]);
     expect(relationHints("M10", [{ measureId: "M12" }])).toEqual([

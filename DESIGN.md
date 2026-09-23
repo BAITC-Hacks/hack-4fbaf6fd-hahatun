@@ -3,9 +3,8 @@
 ## 1. Visual theme & atmosphere
 
 An official akimat letterhead, not a SaaS dashboard. Cool paper, navy ink, the sky and gold of
-Astana's flag. The page reads like a document someone signs: a letterhead header with the
-qoshqar-muiz (ram's horn) ornament band under it, calm tables, and one round ink stamp that
-carries the outcome. Numbers are counted by code and shown plainly; the LLM's texts are quoted,
+Astana's flag. The page reads like a document someone signs: a plain letterhead header,
+calm tables, and one round ink stamp that carries the outcome. Numbers are counted by code and shown plainly; the LLM's texts are quoted,
 never decorated. Light theme only: the game is played in a lit room on a projector or laptop.
 
 ## 2. Color palette & roles
@@ -49,8 +48,10 @@ keep ≥ 4.5:1 (`src/components/map/heat.ts`).
 
 ## 4. Component stylings
 
-- **Header** (`AppShell`): card-tinted letterhead; mark + wordmark (display, sentence case) +
-  one-line muted subtitle; step nav on the right; ornament band in sky under it.
+- **Header** (`SiteHeader`): one calm row on `bg-card` with a hairline underneath — dial mark +
+  «Аким на 5 часов в Астане» (display, sentence case) on the left, the step row on the right
+  («Лидерборд» after a divider). No subtitle, no ornament. Below 640px the row wraps under the
+  name and step labels collapse to numbers except the current one. `html, body { overflow-x: clip }`.
 - **PageHeader**: title, lead, optional quiet `meta` line (e.g. «Прогон sample-run-001»).
   No eyebrow — the step is already in the nav.
 - **Card** (shadcn): radius 12px, 1px ring, `bg-card`. One containment layer only.
@@ -60,8 +61,9 @@ keep ≥ 4.5:1 (`src/components/map/heat.ts`).
 - **Dispute**: small 8px gold square beside the topic, text indented — no side stripe.
 - **Outcome stamp**: round double border, rotated −6°, uppercase display — the one place
   where uppercase and tracking are allowed.
-- **Verdict summary**: big Score + delta on the left, a definition list (label / value rows
-  separated by hairlines) in the middle, stamp on the right.
+- **Verdict summary**: the only card on the verdict — big Score + delta, the stamp, one plain
+  sentence built by code (outcome, Score change, criticals, weakest district), one quiet line
+  with percentile and review. Next steps come right under it; details live in `<details>`.
 - **Toggles** (district switcher): ghost buttons in a row between two hairlines; selected =
   `bg-accent text-accent-foreground`.
 - **Chips**: effect chips `bg-muted` mono; fact chips mono with 1px border; relation chips pill.

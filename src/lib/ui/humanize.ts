@@ -2,17 +2,31 @@ import type { Draft, ExpertOpinion, Fact, Improvement, MeasureId, Resolution, Re
 import { DISTRICT_LABELS } from "@/lib/types";
 import { DISTRICT_IN, MEASURE_SHORT } from "./labels";
 
-// Players never see M1…M14: codes in backend and LLM text become short measure names.
-const CODE = /\bM(1[0-4]|[1-9])\b/g;
-const CODE_BEFORE_QUOTE = /\bM(?:1[0-4]|[1-9])\s+(?=«)/g; // "M5 «Перевод…»" keeps only the title
+// Players never see M1…M14: codes in validator, backend and LLM text become «short measure names».
+const CODE_REF = /\bM(1[0-4]|[1-9])\b(?:\s*«[^»]*»)?/g; // "M5" or "M5 «Перевод…»" — the long title goes too
+const CODE_JOIN = /\b(M(?:1[0-4]|[1-9]))\s*\+\s*(?=M(?:1[0-4]|[1-9])\b)/g; // "M10+M12" -> "M10 + M12"
+const SENTENCE_START = /(^|[.!?]\s+)$/;
 const SIDE = /^\s*M(1[0-4]|[1-9])\b(.*)$/;
 const DISTRICT_BY_NAME = new Map(Object.entries(DISTRICT_LABELS).map(([id, name]) => [name, id as keyof typeof DISTRICT_IN]));
 
 const short = (n: string) => MEASURE_SHORT[`M${n}` as MeasureId];
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+// A backend swap string embedded in LLM text: "M5 Сарыарка → M3 Линия ЛРТ / расширение, Нура".
+const EMBEDDED_CHANGE =
+  /\bM(?:1[0-4]|[1-9])\b[^→\n]{0,24}→\s*M(?:1[0-4]|[1-9])\b[^,.\n(]*(?:\(город\)|,\s*(?:Есиль|Алматы|Сарыарка|Байконур|Нура|город))?/g;
+
 export function humanizeText(text: string): string {
-  return text.replace(CODE_BEFORE_QUOTE, "").replace(CODE, (_, n: string) => short(n));
+  return text
+    .replace(EMBEDDED_CHANGE, (match: string, offset: number, all: string) => {
+      const change = humanizeChange(match);
+      return SENTENCE_START.test(all.slice(0, offset)) ? change : change.charAt(0).toLowerCase() + change.slice(1);
+    })
+    .replace(CODE_JOIN, "$1 + ")
+    .replace(CODE_REF, (_, n: string, offset: number, all: string) => {
+    const name = short(n);
+    return `«${SENTENCE_START.test(all.slice(0, offset)) ? capitalize(name) : name}»`;
+  });
 }
 
 function where(rest: string): string {
