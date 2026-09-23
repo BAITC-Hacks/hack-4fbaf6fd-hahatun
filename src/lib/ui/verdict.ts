@@ -1,6 +1,7 @@
-import type { DistrictResult, EngineResult, Outcome, Run } from "@/lib/types";
+import type { Decision, DistrictResult, EngineResult, Outcome, Run } from "@/lib/types";
 import { CRITICAL_THRESHOLD, DISTRICT_LABELS } from "@/lib/types";
 import { formatScore, trendOf } from "./format";
+import { DISTRICT_IN, MEASURE_SHORT } from "./labels";
 import { encodeDecisions } from "./scenario";
 
 const OUTCOME_VERB: Record<Outcome, string> = {
@@ -72,4 +73,56 @@ export function nextSteps(run: Pick<Run, "id" | "resolution" | "optimizer">): Ne
     delta,
     href: `/play?s=${encodeDecisions(scenario.decisions)}`,
   }));
+}
+
+export interface OptimumGap {
+  gap: number;
+  isOptimal: boolean;
+  swaps: string[];
+  href: string;
+}
+
+const sameDecision = (a: Decision, b: Decision) => a.measureId === b.measureId && a.districtId === b.districtId;
+
+// "чистое топливо в Сарыарке"; city-wide measures have no district.
+function measurePhrase(d: Decision): string {
+  const name = MEASURE_SHORT[d.measureId];
+  return d.districtId ? `${name} ${DISTRICT_IN[d.districtId]}` : name;
+}
+
+function districtName(d: Decision): string {
+  return d.districtId ? DISTRICT_LABELS[d.districtId] : "весь город";
+}
+
+/** Human-readable differences between the user's set and the optimum, paired greedily in list order. */
+function optimumSwaps(mine: Decision[], best: Decision[]): string[] {
+  const out = mine.filter((d) => !best.some((b) => sameDecision(d, b)));
+  const add = best.filter((b) => !mine.some((d) => sameDecision(d, b)));
+  const swaps: string[] = [];
+  // Same measure in another district: "школа и детсад: Есиль → Нура".
+  for (const d of [...out]) {
+    const moved = add.find((b) => b.measureId === d.measureId);
+    if (!moved) continue;
+    swaps.push(`${MEASURE_SHORT[d.measureId]}: ${districtName(d)} → ${districtName(moved)}`);
+    out.splice(out.indexOf(d), 1);
+    add.splice(add.indexOf(moved), 1);
+  }
+  const pairs = Math.min(out.length, add.length);
+  for (let i = 0; i < pairs; i++) swaps.push(`${measurePhrase(out[i])} → ${measurePhrase(add[i])}`);
+  for (const d of out.slice(pairs)) swaps.push(`убрать ${measurePhrase(d)}`);
+  for (const b of add.slice(pairs)) swaps.push(`добавить ${measurePhrase(b)}`);
+  return swaps;
+}
+
+/** How far the user's set is from the best valid one, and what to swap to get there. */
+export function optimumGap(run: Pick<Run, "scenario" | "engine" | "optimizer">): OptimumGap {
+  const { bestScore, bestScenario } = run.optimizer;
+  const gap = bestScore - run.engine.score;
+  const isOptimal = gap < 0.005;
+  return {
+    gap,
+    isOptimal,
+    swaps: isOptimal ? [] : optimumSwaps(run.scenario.decisions, bestScenario.decisions),
+    href: `/play?s=${encodeDecisions(bestScenario.decisions)}`,
+  };
 }

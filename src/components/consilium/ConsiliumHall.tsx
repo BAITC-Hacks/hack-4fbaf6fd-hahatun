@@ -18,7 +18,7 @@ export function ConsiliumHall({ run }: { run: Run }) {
       <h2 id="consilium" className="border-b border-border pb-2 font-display text-lg font-semibold">
         Консилиум
       </h2>
-      <ResolutionBrief resolution={resolution} />
+      <ResolutionBrief resolution={resolution} voiceRunId={run.llmEnabled && run.id !== "sample-run-001" ? run.id : undefined} />
       <div className="flex flex-col gap-1">
         <h3 className="font-display text-base font-semibold">Эксперты</h3>
         <ul className="divide-y divide-border">

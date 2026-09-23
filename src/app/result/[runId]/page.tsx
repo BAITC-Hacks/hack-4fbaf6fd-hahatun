@@ -43,7 +43,7 @@ export default async function ResultPage({ params }: PageProps<"/result/[runId]"
         <ConsiliumHall run={run} />
         <div className="divide-y divide-border border-y border-border">
           <Disclosure size="section" title="Районы до и после">
-            <DistrictComparison districts={run.engine.districts} />
+            <DistrictComparison districts={run.engine.districts} scenario={run.scenario} />
           </Disclosure>
           <Disclosure size="section" title="Как считалось">
             <HowCalculated run={run} />
