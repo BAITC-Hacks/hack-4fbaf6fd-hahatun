@@ -46,6 +46,16 @@ test.describe("Аким на 5 часов — приёмка", () => {
     await expect(page.getByText("Резолюция").first()).toBeVisible();
     await expect(page.getByText("Как считалось").first()).toBeVisible();
     await expect(page.getByText("Районы до и после").first()).toBeVisible();
+
+    // W2: quarter slider replays the plan; quarter 0 is the baseline, quarter 8 the engine result
+    await page.getByText("Районы до и после").first().click();
+    const slider = page.getByRole("slider", { name: "Квартал" });
+    await expect(slider).toBeVisible();
+    await slider.focus();
+    await slider.press("Home");
+    await expect(page.getByText("Score к кварталу 0: 52.56")).toBeVisible();
+    await slider.press("End");
+    await expect(page.getByText("Score к кварталу 8: 56.54")).toBeVisible();
     for (const name of EXPERTS) await expect(page.getByText(name).first()).toBeVisible();
 
     // round-3 UI: event card, pitch link, usage panel
