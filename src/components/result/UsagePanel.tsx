@@ -5,7 +5,7 @@ const INT = new Intl.NumberFormat("ru-RU");
 const SECONDS = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 });
 
 function formatUsd(n: number): string {
-  return n === 0 ? "$0" : `$${n.toFixed(3)}`;
+  return n === 0 ? "$0" : `$${n.toFixed(n < 0.01 ? 4 : 3)}`;
 }
 
 function formatSeconds(ms: number): string {
