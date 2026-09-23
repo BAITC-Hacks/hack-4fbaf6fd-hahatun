@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { buildFacts, calculate, validate } from "@/lib/engine";
 import { optimize } from "@/lib/engine/optimizer";
+import { isDefaultDataset, type Dataset } from "@/lib/dataset";
 import { saveRun } from "@/lib/store/runs";
 import {
   REVIEW_MAX_ROUNDS,
@@ -25,6 +26,7 @@ import { synthesize } from "./synthesizer";
 export interface ConsiliumInput {
   teamName: string;
   scenario: Scenario;
+  dataset?: Dataset; // sandbox dataset; absent = the case data
 }
 
 type Emit = (e: ConsiliumEvent) => void;
@@ -49,10 +51,15 @@ class StageTracker {
   }
 }
 
-async function safeOptimize(scenario: Scenario, engine: EngineResult, stages: StageTracker): Promise<OptimizerResult> {
+async function safeOptimize(
+  scenario: Scenario,
+  engine: EngineResult,
+  stages: StageTracker,
+  dataset?: Dataset,
+): Promise<OptimizerResult> {
   stages.start("optimize");
   try {
-    const result = await optimize(scenario);
+    const result = await optimize(scenario, dataset);
     stages.done();
     return result;
   } catch (err) {
@@ -67,6 +74,7 @@ interface RevisionContext {
   opinions: ExpertOpinion[];
   improvements: Improvement[];
   userScore: number;
+  dataset?: Dataset;
 }
 
 async function reviseLoop(ctx: RevisionContext, usage: LlmUsage, emit: Emit, stages: StageTracker) {
@@ -76,14 +84,14 @@ async function reviseLoop(ctx: RevisionContext, usage: LlmUsage, emit: Emit, sta
   for (let round = 1; round <= REVIEW_MAX_ROUNDS; round++) {
     const label = `круг ${round}`;
     stages.start("draft", label);
-    const { scenario, facts, opinions, improvements } = ctx;
-    const draft = await synthesize({ scenario, facts, opinions, improvements, previous }, usage);
+    const { scenario, facts, opinions, improvements, dataset } = ctx;
+    const draft = await synthesize({ scenario, facts, opinions, improvements, previous, dataset }, usage);
     drafts.push(draft);
     emit({ type: "draft", draft });
     stages.done(label);
 
     stages.start("review", label);
-    const result = await review({ draft, facts, userScore: ctx.userScore, round }, usage);
+    const result = await review({ draft, facts, userScore: ctx.userScore, round, dataset }, usage);
     reviews.push(result);
     emit({ type: "review", review: result });
     stages.done(label);
@@ -96,12 +104,12 @@ async function reviseLoop(ctx: RevisionContext, usage: LlmUsage, emit: Emit, sta
 
 // Runs the whole consilium, streaming events. Returns the saved Run, or null on any failure (nothing is saved then).
 export async function runConsilium(input: ConsiliumInput, emit: Emit): Promise<Run | null> {
-  const { teamName, scenario } = input;
+  const { teamName, scenario, dataset } = input;
   const runId = randomUUID();
   const stages = new StageTracker(emit, runId);
 
   stages.start("validate");
-  const validation = validate(scenario);
+  const validation = validate(scenario, dataset);
   if (!validation.ok) {
     const message = validation.errors.map((e) => e.message).join("; ");
     emit({ type: "error", message });
@@ -111,7 +119,7 @@ export async function runConsilium(input: ConsiliumInput, emit: Emit): Promise<R
   stages.done();
 
   try {
-    return await runStages(teamName, scenario, emit, stages);
+    return await runStages({ teamName, scenario, dataset }, emit, stages);
   } catch (err) {
     const message = errorMessage(err);
     emit({ type: "error", message });
@@ -120,26 +128,27 @@ export async function runConsilium(input: ConsiliumInput, emit: Emit): Promise<R
   }
 }
 
-async function runStages(teamName: string, scenario: Scenario, emit: Emit, stages: StageTracker): Promise<Run> {
+async function runStages(input: ConsiliumInput, emit: Emit, stages: StageTracker): Promise<Run> {
+  const { teamName, scenario, dataset } = input;
   const usage = new LlmUsage();
   const startedAt = Date.now();
 
   stages.start("engine");
-  const engine = calculate(scenario);
+  const engine = calculate(scenario, [], dataset);
   stages.done();
-  const optimizer = await safeOptimize(scenario, engine, stages);
+  const optimizer = await safeOptimize(scenario, engine, stages, dataset);
   const { improvements } = optimizer;
-  const facts = buildFacts(scenario, engine, optimizer);
+  const facts = buildFacts(scenario, engine, optimizer, dataset);
   emit({ type: "engine", result: engine, facts });
   emit({ type: "optimizer", result: optimizer });
 
   stages.start("experts");
-  const opinions = await runExperts({ scenario, facts, improvements }, usage, (opinion) =>
+  const opinions = await runExperts({ scenario, facts, improvements, dataset }, usage, (opinion) =>
     emit({ type: "expert", opinion }),
   );
   stages.done();
 
-  const ctx: RevisionContext = { scenario, facts, opinions, improvements, userScore: engine.score };
+  const ctx: RevisionContext = { scenario, facts, opinions, improvements, userScore: engine.score, dataset };
   const { drafts, reviews } = await reviseLoop(ctx, usage, emit, stages);
   const draft = drafts[drafts.length - 1];
   const lastReview = reviews[reviews.length - 1];
@@ -165,6 +174,7 @@ async function runStages(teamName: string, scenario: Scenario, emit: Emit, stage
     llmEnabled: isLlmEnabled(),
     // wall-clock of the whole run, not the sum of LLM calls (which is 0 in fallback mode)
     usage: { ...usage.summary(), durationMs: Date.now() - startedAt },
+    ...(dataset && !isDefaultDataset(dataset) ? { sandbox: { datasetName: dataset.name, dataset } } : {}),
   };
   await saveRun(run);
   stages.done();

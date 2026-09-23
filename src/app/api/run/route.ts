@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { runConsilium } from "@/lib/consilium/pipeline";
 import { DISTRICT_BY_ID, MEASURE_BY_ID } from "@/lib/data";
+import { parseDataset, type Dataset } from "@/lib/dataset";
 import type { ConsiliumEvent, Scenario } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -20,7 +21,10 @@ const bodySchema = z.object({
       }),
     ).max(20),
   }),
+  dataset: z.unknown().optional(), // checked by parseDataset below
 });
+
+const MAX_BODY_CHARS = 200_000;
 
 const SSE_HEADERS = {
   "Content-Type": "text/event-stream; charset=utf-8",
@@ -54,11 +58,20 @@ export async function POST(request: Request) {
   } catch {
     return Response.json({ error: "invalid JSON body" }, { status: 400 });
   }
+  if (JSON.stringify(json ?? null).length > MAX_BODY_CHARS) {
+    return Response.json({ error: "Тело запроса слишком большое" }, { status: 413 });
+  }
   const parsed = bodySchema.safeParse(json);
   if (!parsed.success) {
     return Response.json({ error: "invalid body", issues: z.flattenError(parsed.error) }, { status: 400 });
   }
   const { teamName } = parsed.data;
+  let dataset: Dataset | undefined;
+  if (parsed.data.dataset !== undefined) {
+    const ds = parseDataset(parsed.data.dataset);
+    if (!ds.ok) return Response.json({ error: "Датасет не прошёл проверку", issues: ds.errors }, { status: 400 });
+    dataset = ds.dataset;
+  }
   const scenario = parsed.data.scenario as Scenario;
   lastStartByIp.set(ip, Date.now());
   activeRuns += 1;
@@ -76,7 +89,7 @@ export async function POST(request: Request) {
         }
       };
       try {
-        await runConsilium({ teamName, scenario }, emit);
+        await runConsilium({ teamName, scenario, ...(dataset ? { dataset } : {}) }, emit);
       } finally {
         activeRuns = Math.max(0, activeRuns - 1);
         if (open) { try { controller.close(); } catch { /* stream already cancelled */ } }

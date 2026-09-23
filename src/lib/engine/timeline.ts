@@ -1,4 +1,6 @@
-import { DISTRICTS, INDICATORS, MEASURE_BY_ID, SCORE_WEIGHTS, SYNERGIES, WEIGHTS } from "@/lib/data";
+import { INDICATORS, SCORE_WEIGHTS } from "@/lib/data";
+import { DEFAULT_DATASET, type Dataset } from "@/lib/dataset";
+import { measureIndex } from "./engine";
 import {
   CRITICAL_THRESHOLD,
   HORIZON_QUARTERS,
@@ -21,14 +23,17 @@ export interface QuarterValues {
 
 const clip = (x: number) => Math.min(100, Math.max(0, x));
 
-export function valuesAtQuarter(scenario: Scenario, quarter: number): QuarterValues {
+export function valuesAtQuarter(scenario: Scenario, quarter: number, ds: Dataset = DEFAULT_DATASET): QuarterValues {
+  const DISTRICTS = ds.districts;
+  const WEIGHTS = ds.weights;
+  const byId = measureIndex(ds);
   const q = Math.max(0, Math.min(HORIZON_QUARTERS, Math.round(quarter)));
   const values = {} as Record<DistrictId, Record<Indicator, number>>;
   for (const d of DISTRICTS) values[d.id] = { ...d.indicators };
 
   const active = new Set<Decision["measureId"]>();
   for (const dec of scenario.decisions) {
-    const m = MEASURE_BY_ID[dec.measureId];
+    const m = byId.get(dec.measureId);
     if (!m) continue;
     const factor = Math.max(0, q - m.lag) / HORIZON_QUARTERS;
     if (factor <= 0) continue;
@@ -39,7 +44,7 @@ export function valuesAtQuarter(scenario: Scenario, quarter: number): QuarterVal
     }
   }
   const districtOf = new Map(scenario.decisions.map((d) => [d.measureId, d.districtId]));
-  for (const s of SYNERGIES) {
+  for (const s of ds.synergies) {
     const [a, b] = s.pair;
     if (!active.has(a) || !active.has(b)) continue;
     const target = districtOf.get(a);
@@ -67,10 +72,10 @@ export function valuesAtQuarter(scenario: Scenario, quarter: number): QuarterVal
   return { quarter: q, districts, score, nCrit };
 }
 
-export function scoreAtQuarter(scenario: Scenario, quarter: number): number {
-  return valuesAtQuarter(scenario, quarter).score;
+export function scoreAtQuarter(scenario: Scenario, quarter: number, ds: Dataset = DEFAULT_DATASET): number {
+  return valuesAtQuarter(scenario, quarter, ds).score;
 }
 
-export function timeline(scenario: Scenario): QuarterValues[] {
-  return Array.from({ length: HORIZON_QUARTERS + 1 }, (_, q) => valuesAtQuarter(scenario, q));
+export function timeline(scenario: Scenario, ds: Dataset = DEFAULT_DATASET): QuarterValues[] {
+  return Array.from({ length: HORIZON_QUARTERS + 1 }, (_, q) => valuesAtQuarter(scenario, q, ds));
 }

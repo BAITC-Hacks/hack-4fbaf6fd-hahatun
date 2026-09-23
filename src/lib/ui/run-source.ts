@@ -25,6 +25,7 @@ export interface RunSummary {
   reviewPassed: number;
   llmEnabled: boolean;
   isSample: boolean;
+  sandbox: boolean;
 }
 
 export function toSummary(run: Run, isSample = false): RunSummary {
@@ -38,6 +39,7 @@ export function toSummary(run: Run, isSample = false): RunSummary {
     percentile: run.optimizer.percentile,
     weakestDistrict: run.engine.minDistrict.id,
     reviewPassed: run.reviews.at(-1)?.passed ?? 0,
+    sandbox: Boolean(run.sandbox),
     llmEnabled: run.llmEnabled,
     isSample,
   };

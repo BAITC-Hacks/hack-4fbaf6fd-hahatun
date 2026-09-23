@@ -1,3 +1,4 @@
+import { writeFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 
 const GOLDEN = "M7.nura,M8.nura,M10.nura,M12,M5.saryarka";
@@ -92,5 +93,40 @@ test.describe("Аким на 5 часов — приёмка", () => {
     expect(res?.status()).toBe(404);
     const bad = await request.post("/api/run", { data: { teamName: "x", scenario: { decisions: [{ measureId: "M99" }] } } });
     expect(bad.status()).toBe(400);
+  });
+
+  test("песочница: свой датасет меняет Score, битый файл даёт ошибки", async ({ page, request }) => {
+    const template = (await (await request.get("/dataset-hackalem.json")).json()) as {
+      name: string;
+      districts: { id: string; indicators: Record<string, number> }[];
+    };
+    template.name = "Тестовый город";
+    template.districts.find((d) => d.id === "nura")!.indicators.S1 = 60;
+    const good = test.info().outputPath("ds.json");
+    const broken = test.info().outputPath("broken.json");
+    await writeFile(good, JSON.stringify(template));
+    await writeFile(broken, JSON.stringify({ name: "x" }));
+
+    await page.goto("/sandbox");
+    await expect(page.getByRole("heading", { name: "Песочница: свои данные" })).toBeVisible();
+    const input = page.getByLabel("Загрузить датасет");
+
+    await input.setInputFiles(broken);
+    await expect(page.getByRole("listitem").filter({ hasText: /^districts:/ })).toBeVisible();
+
+    await input.setInputFiles(good);
+    await expect(page.getByRole("heading", { name: "Тестовый город" })).toBeVisible();
+    await page.getByRole("button", { name: "Играть на этих данных" }).click();
+    await expect(page).toHaveURL(/\/play/);
+    await expect(page.getByText("Песочница: Тестовый город")).toBeVisible();
+
+    await page.goto(`/play?s=${GOLDEN}`);
+    await expect(page.getByText("Песочница: Тестовый город")).toBeVisible();
+    await expect(page.getByRole("button", { name: "На консилиум" })).toBeEnabled();
+    await expect(page.getByText("56.54")).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Вернуться к данным кейса" }).click();
+    await expect(page.getByText("Песочница: Тестовый город")).toHaveCount(0);
+    await expect(page.getByText("56.54").first()).toBeVisible();
   });
 });

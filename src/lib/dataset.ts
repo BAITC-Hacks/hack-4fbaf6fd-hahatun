@@ -1,4 +1,7 @@
 import { z } from "zod";
+
+// Validation messages for the import page in Russian.
+z.config(z.locales.ru());
 import { CONFLICTS, DISTRICTS, MEASURES, SYNERGIES, WEIGHTS } from "@/lib/data";
 import type { Conflict, District, Indicator, Measure, Synergy } from "@/lib/types";
 
@@ -99,6 +102,12 @@ export function parseDataset(raw: unknown): ParseResult {
   return { ok: true, dataset: { name: d.name, districts, measures, weights: d.weights, synergies: d.synergies, conflicts: d.conflicts } };
 }
 
+const contentKey = (d: Dataset) =>
+  JSON.stringify([d.districts, d.measures, d.weights, d.synergies, d.conflicts]);
+const DEFAULT_CONTENT_KEY = contentKey(DEFAULT_DATASET);
+
+// The name alone is not enough: an upload may reuse the case's name with different numbers.
 export function isDefaultDataset(d: Dataset | undefined): boolean {
-  return !d || d.name === DEFAULT_DATASET_NAME;
+  if (!d || d === DEFAULT_DATASET) return true;
+  return d.name === DEFAULT_DATASET_NAME && contentKey(d) === DEFAULT_CONTENT_KEY;
 }

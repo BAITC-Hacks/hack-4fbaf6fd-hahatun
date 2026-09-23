@@ -1,4 +1,5 @@
-import { CONFLICTS, MEASURE_BY_ID } from "@/lib/data";
+import { DEFAULT_DATASET, type Dataset } from "@/lib/dataset";
+import { measureIndex } from "./engine";
 import {
   BUDGET,
   DECISIONS_COUNT,
@@ -12,10 +13,11 @@ import {
 } from "@/lib/types";
 
 // Rules from docs/source/dataset.md §4. Returns every violation, not only the first one.
-export function validate(scenario: Scenario): ValidationResult {
+export function validate(scenario: Scenario, ds: Dataset = DEFAULT_DATASET): ValidationResult {
+  const byId = measureIndex(ds);
   const errors: ValidationError[] = [];
   const decisions = scenario.decisions ?? [];
-  const known = decisions.filter((d) => MEASURE_BY_ID[d.measureId] !== undefined);
+  const known = decisions.filter((d) => byId.has(d.measureId));
 
   if (decisions.length !== DECISIONS_COUNT) {
     errors.push({
@@ -24,7 +26,7 @@ export function validate(scenario: Scenario): ValidationResult {
     });
   }
 
-  const cost = known.reduce((sum, d) => sum + MEASURE_BY_ID[d.measureId].cost, 0);
+  const cost = known.reduce((sum, d) => sum + byId.get(d.measureId)!.cost, 0);
   if (cost > BUDGET) {
     errors.push({ code: "BUDGET", message: `Бюджет ${BUDGET} превышен: стоимость набора ${cost}` });
   }
@@ -38,7 +40,7 @@ export function validate(scenario: Scenario): ValidationResult {
   }
 
   for (const d of known) {
-    const m = MEASURE_BY_ID[d.measureId];
+    const m = byId.get(d.measureId)!;
     if (m.scope === "district" && !d.districtId) {
       errors.push({ code: "DISTRICT_REQUIRED", message: `${m.id} «${m.title}»: укажите район` });
     }
@@ -49,7 +51,7 @@ export function validate(scenario: Scenario): ValidationResult {
 
   const perDirection = new Map<Direction, number>();
   for (const id of seen) {
-    const dir = MEASURE_BY_ID[id as keyof typeof MEASURE_BY_ID].direction;
+    const dir = byId.get(id)!.direction;
     perDirection.set(dir, (perDirection.get(dir) ?? 0) + 1);
   }
   for (const [dir, n] of perDirection) {
@@ -62,7 +64,7 @@ export function validate(scenario: Scenario): ValidationResult {
   }
 
   const districtOf = new Map(known.map((d) => [d.measureId, d.districtId]));
-  for (const c of CONFLICTS) {
+  for (const c of ds.conflicts) {
     const [a, b] = c.pair;
     if (!districtOf.has(a) || !districtOf.has(b)) continue;
     const sameDistrict = districtOf.get(a) === districtOf.get(b);

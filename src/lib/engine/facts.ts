@@ -1,4 +1,6 @@
-import { DISTRICTS, INDICATOR_DIRECTION, MEASURE_BY_ID } from "@/lib/data";
+import { DISTRICTS, INDICATOR_DIRECTION } from "@/lib/data";
+import { DEFAULT_DATASET, type Dataset } from "@/lib/dataset";
+import { measureIndex } from "./engine";
 import {
   BUDGET,
   DIRECTION_LABELS,
@@ -14,13 +16,19 @@ import {
 const r2 = (x: number) => Math.round(x * 100) / 100;
 
 // Numbered facts are the only numbers the LLM layer is allowed to quote (reviewer C1 checks this).
-export function buildFacts(scenario: Scenario, engine: EngineResult, optimizer?: OptimizerResult): Fact[] {
+export function buildFacts(
+  scenario: Scenario,
+  engine: EngineResult,
+  optimizer?: OptimizerResult,
+  ds: Dataset = DEFAULT_DATASET,
+): Fact[] {
+  const byId = measureIndex(ds);
   const facts: Fact[] = [];
   const add = (text: string, scope: Fact["scope"], value?: number) => {
     facts.push({ id: `F${facts.length + 1}`, text, scope, ...(value !== undefined ? { value: r2(value) } : {}) });
   };
   const sign = (x: number) => (x >= 0 ? "+" : "−") + Math.abs(r2(x));
-  const cost = scenario.decisions.reduce((s, d) => s + (MEASURE_BY_ID[d.measureId]?.cost ?? 0), 0);
+  const cost = scenario.decisions.reduce((s, d) => s + (byId.get(d.measureId)?.cost ?? 0), 0);
 
   add(`Итоговый Score ${r2(engine.score)}, база ${r2(engine.baseScore)}, дельта ${sign(engine.delta)}`, "general", engine.score);
   const weakest = engine.districts.find((d) => d.id === engine.minDistrict.id)!;
@@ -67,7 +75,7 @@ export function buildFacts(scenario: Scenario, engine: EngineResult, optimizer?:
   }
 
   for (const c of engine.contributions) {
-    const m = MEASURE_BY_ID[c.measureId];
+    const m = byId.get(c.measureId)!;
     add(`Вклад ${c.measureId} «${m.title}» в Score: ${sign(c.delta)}`, m.direction, c.delta);
   }
   for (const s of engine.synergies) add(`Синергия сработала: ${s}`, "general");

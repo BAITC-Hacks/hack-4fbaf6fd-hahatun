@@ -1,3 +1,4 @@
+import type { Dataset } from "@/lib/dataset";
 import type {
   ConsiliumEvent,
   Draft,
@@ -100,7 +101,7 @@ async function readErrorMessage(res: Response): Promise<string> {
 
 /** POST /api/run and yield events as they arrive (EventSource cannot POST). */
 export async function* streamRun(
-  body: { teamName: string; scenario: Scenario },
+  body: { teamName: string; scenario: Scenario; dataset?: Dataset },
   signal?: AbortSignal,
 ): AsyncGenerator<ConsiliumEvent> {
   let res: Response;

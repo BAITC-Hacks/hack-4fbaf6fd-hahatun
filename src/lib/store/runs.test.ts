@@ -36,8 +36,8 @@ describe("store/runs", () => {
 
     expect(await loadRun("run-old")).toEqual(older);
     expect(await listRuns()).toEqual([
-      { id: "run_new", teamName: "B", createdAt: newer.createdAt },
-      { id: "run-old", teamName: "A", createdAt: older.createdAt },
+      { id: "run_new", teamName: "B", createdAt: newer.createdAt, sandbox: false },
+      { id: "run-old", teamName: "A", createdAt: older.createdAt, sandbox: false },
     ]);
   });
 

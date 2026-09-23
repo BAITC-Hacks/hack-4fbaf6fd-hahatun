@@ -20,6 +20,7 @@ const STEPS: Step[] = [
 export function MainNav() {
   const pathname = usePathname();
   const onLeaderboard = pathname.startsWith("/leaderboard");
+  const onSandbox = pathname.startsWith("/sandbox");
 
   return (
     <nav aria-label="Навигация" className="flex items-center gap-2 py-1 text-sm whitespace-nowrap sm:gap-4">
@@ -83,6 +84,16 @@ export function MainNav() {
         )}
       >
         Лидерборд
+      </Link>
+      <Link
+        href="/sandbox"
+        aria-current={onSandbox ? "page" : undefined}
+        className={cn(
+          "rounded-md p-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+          onSandbox ? "font-medium" : "text-muted-foreground hover:text-foreground",
+        )}
+      >
+        Песочница
       </Link>
     </nav>
   );

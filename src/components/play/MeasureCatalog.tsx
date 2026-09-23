@@ -1,6 +1,6 @@
 "use client";
 
-import { MEASURES } from "@/lib/data";
+import type { Dataset } from "@/lib/dataset";
 import {
   DIRECTION_CAP,
   DIRECTION_LABELS,
@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { MeasureRow } from "./MeasureRow";
 
 interface MeasureCatalogProps {
+  ds: Dataset;
   decisions: Decision[];
   counts: Record<Direction, number>;
   blockedReason?: string; // applied to rows that are not selected
@@ -23,16 +24,25 @@ interface MeasureCatalogProps {
 
 const BY_NUMBER = (a: { id: string }, b: { id: string }) => Number(a.id.slice(1)) - Number(b.id.slice(1));
 
-const SECTIONS = (Object.keys(DIRECTION_LABELS) as Direction[]).map((direction) => ({
-  direction,
-  measures: MEASURES.filter((m) => m.direction === direction).sort(BY_NUMBER),
-}));
+function sections(ds: Dataset) {
+  return (Object.keys(DIRECTION_LABELS) as Direction[]).map((direction) => ({
+    direction,
+    measures: ds.measures.filter((m) => m.direction === direction).sort(BY_NUMBER),
+  }));
+}
 
-export function MeasureCatalog({ decisions, counts, blockedReason, onToggle, onDistrictChange }: MeasureCatalogProps) {
+export function MeasureCatalog({
+  ds,
+  decisions,
+  counts,
+  blockedReason,
+  onToggle,
+  onDistrictChange,
+}: MeasureCatalogProps) {
   const chosen = new Map(decisions.map((d) => [d.measureId, d]));
   return (
     <div className="flex flex-col gap-10">
-      {SECTIONS.map(({ direction, measures }) => {
+      {sections(ds).map(({ direction, measures }) => {
         const n = counts[direction] ?? 0;
         return (
           <section key={direction} aria-labelledby={`dir-${direction}`}>
@@ -56,9 +66,10 @@ export function MeasureCatalog({ decisions, counts, blockedReason, onToggle, onD
                 <MeasureRow
                   key={m.id}
                   measure={m}
+                  ds={ds}
                   selected={chosen.has(m.id)}
                   districtId={chosen.get(m.id)?.districtId}
-                  hints={relationHints(m.id, decisions)}
+                  hints={relationHints(m.id, decisions, ds)}
                   blockedReason={blockedReason}
                   onToggle={() => onToggle(m.id)}
                   onDistrictChange={(district) => onDistrictChange(m.id, district)}
