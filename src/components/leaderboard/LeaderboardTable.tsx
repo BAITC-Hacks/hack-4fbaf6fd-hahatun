@@ -37,12 +37,12 @@ export function LeaderboardTable({ runs }: { runs: RunSummary[] }) {
               <th
                 key={c.label}
                 scope="col"
-                className={cn("px-4 py-3 font-normal", c.align === "right" ? "text-right" : "text-left")}
+                className={cn("px-3 py-3 font-normal", c.align === "right" ? "text-right" : "text-left")}
               >
                 {c.label}
               </th>
             ))}
-            <th scope="col" className="px-4 py-3">
+            <th scope="col" className="px-3 py-3">
               <span className="sr-only">Действия</span>
             </th>
           </tr>

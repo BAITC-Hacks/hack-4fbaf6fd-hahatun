@@ -24,10 +24,10 @@ export function LeaderboardRow({ run, rank }: { run: RunSummary; rank: number })
   const tone = OUTCOME_TONE[run.outcome];
   return (
     <tr className="border-t border-border">
-      <td className={cn("px-4 py-3 font-mono tabular-nums", rankTone(rank))}>{rank}</td>
-      <td className="min-w-48 px-4 py-3 font-medium">
+      <td className={cn("px-3 py-3 font-mono tabular-nums", rankTone(rank))}>{rank}</td>
+      <td className="min-w-40 px-3 py-3 font-medium">
         <span className="flex items-center gap-2">
-          <span className="max-w-64 truncate" title={run.teamName}>
+          <span className="break-words" title={run.teamName}>
             {run.teamName}
           </span>
           {run.isSample && (
@@ -37,25 +37,25 @@ export function LeaderboardRow({ run, rank }: { run: RunSummary; rank: number })
           )}
         </span>
       </td>
-      <td className="px-4 py-3 text-right font-display text-base font-semibold tabular-nums">
+      <td className="px-3 py-3 text-right font-display text-base font-semibold tabular-nums">
         {formatScore(run.score)}
       </td>
-      <td className="px-4 py-3 text-right">
+      <td className="px-3 py-3 text-right">
         <DeltaValue value={run.delta} />
       </td>
-      <td className="px-4 py-3">
+      <td className="px-3 py-3">
         <span className={cn("inline-flex items-center gap-2 whitespace-nowrap", tone.text)}>
           <span aria-hidden className={cn("size-2 rounded-full", tone.bg)} />
           {OUTCOME_LABELS[run.outcome]}
         </span>
       </td>
-      <td className="px-4 py-3 text-right tabular-nums">{formatPercent(run.percentile)}</td>
-      <td className="px-4 py-3">{DISTRICT_LABELS[run.weakestDistrict]}</td>
-      <td className="px-4 py-3 text-right font-mono tabular-nums">{run.reviewPassed}/6</td>
-      <td className="px-4 py-3 text-right font-mono text-muted-foreground tabular-nums">
+      <td className="px-3 py-3 text-right tabular-nums">{formatPercent(run.percentile)}</td>
+      <td className="px-3 py-3">{DISTRICT_LABELS[run.weakestDistrict]}</td>
+      <td className="px-3 py-3 text-right font-mono tabular-nums">{run.reviewPassed}/6</td>
+      <td className="px-3 py-3 text-right font-mono text-muted-foreground tabular-nums">
         <time dateTime={run.createdAt}>{TIME_FORMAT.format(new Date(run.createdAt))}</time>
       </td>
-      <td className="px-4 py-3 text-right">
+      <td className="px-3 py-3 text-right">
         <Link href={`/result/${run.id}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>
           Открыть
         </Link>
