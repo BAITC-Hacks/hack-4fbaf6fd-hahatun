@@ -13,7 +13,7 @@ next-env.d.ts
 .env.*.local
 
 # runtime data
-data/
+/data/
 tmp/
 
 # os / editor
