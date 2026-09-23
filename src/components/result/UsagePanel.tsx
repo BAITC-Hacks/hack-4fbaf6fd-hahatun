@@ -1,3 +1,4 @@
+import { llmStatus } from "@/lib/ui/llm-status";
 import type { Run } from "@/lib/types";
 
 const INT = new Intl.NumberFormat("ru-RU");
@@ -22,6 +23,7 @@ export function UsagePanel({ run }: { run: Run }) {
       <span className="tabular-nums">{formatUsd(costUsd)}</span> · длительность:{" "}
       <span className="tabular-nums">{formatSeconds(durationMs)}</span>
       {!run.llmEnabled && " (без ключа OpenAI, вызовы не тратились)"}
+      {llmStatus(run) === "failed" && " (модель не ответила, токены не потрачены)"}
     </p>
   );
 }
