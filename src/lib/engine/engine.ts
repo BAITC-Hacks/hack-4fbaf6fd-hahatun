@@ -3,6 +3,7 @@ import {
   CRITICAL_THRESHOLD,
   DISTRICT_LABELS,
   HORIZON_QUARTERS,
+  type CityShock,
   type Decision,
   type DistrictId,
   type EngineResult,
@@ -23,7 +24,8 @@ function clip(x: number): number {
 }
 
 // Applies measure effects with the lag factor and fixed synergy bonuses. Source: dataset.md §3 step 1.
-export function applyDecisions(decisions: Decision[]): { values: Values; synergies: string[] } {
+// Optional A14 shocks are added after measures and synergies, before the clip to 0..100.
+export function applyDecisions(decisions: Decision[], shocks: CityShock[] = []): { values: Values; synergies: string[] } {
   const values = baseValues();
   for (const dec of decisions) {
     const m = MEASURE_BY_ID[dec.measureId];
@@ -46,6 +48,7 @@ export function applyDecisions(decisions: Decision[]): { values: Values; synergi
     values[target][s.indicator] += s.bonus;
     synergies.push(`${a}+${b}: ${s.indicator} +${s.bonus} в ${DISTRICT_LABELS[target]}`);
   }
+  for (const sh of shocks) values[sh.districtId][sh.indicator] += sh.delta;
   for (const d of DISTRICTS) for (const k of INDICATORS) values[d.id][k] = clip(values[d.id][k]);
   return { values, synergies };
 }
@@ -75,18 +78,18 @@ function scoreFromValues(values: Values) {
 }
 
 // Fast path for the optimizer: only the number.
-export function scoreOf(decisions: Decision[]): number {
-  return scoreFromValues(applyDecisions(decisions).values).score;
+export function scoreOf(decisions: Decision[], shocks: CityShock[] = []): number {
+  return scoreFromValues(applyDecisions(decisions, shocks).values).score;
 }
 
-export function calculate(scenario: Scenario): EngineResult {
+export function calculate(scenario: Scenario, shocks: CityShock[] = []): EngineResult {
   const base = scoreFromValues(baseValues());
-  const { values, synergies } = applyDecisions(scenario.decisions);
+  const { values, synergies } = applyDecisions(scenario.decisions, shocks);
   const after = scoreFromValues(values);
   const baseVals = baseValues();
   const contributions = scenario.decisions.map((_, i) => {
     const without = scenario.decisions.filter((_, j) => j !== i);
-    return { measureId: scenario.decisions[i].measureId, delta: after.score - scoreOf(without) };
+    return { measureId: scenario.decisions[i].measureId, delta: after.score - scoreOf(without, shocks) };
   });
   return {
     baseScore: base.score,

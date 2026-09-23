@@ -58,3 +58,16 @@ describe("store/runs", () => {
     await expect(saveRun(make("a/b", "2026-09-23T10:00:00.000Z"))).rejects.toThrow(/invalid run id/);
   });
 });
+
+describe("runsDir", () => {
+  it("falls back to ./data/runs when DATA_DIR is set but empty (copied .env.example)", async () => {
+    const prev = process.env.DATA_DIR;
+    process.env.DATA_DIR = "";
+    try {
+      const { runsDir } = await import("./runs");
+      expect(runsDir().endsWith(path.join("data", "runs"))).toBe(true);
+    } finally {
+      process.env.DATA_DIR = prev;
+    }
+  });
+});

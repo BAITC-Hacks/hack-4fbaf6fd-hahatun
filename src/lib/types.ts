@@ -203,6 +203,23 @@ export interface Run {
   usage: RunUsage;
 }
 
+// A14: an unexpected city event applied on top of a finished run (deterministic per run id).
+export interface CityShock {
+  districtId: DistrictId;
+  indicator: Indicator;
+  delta: number; // negative = damage, applied after measures, before clip
+}
+export interface CityEvent {
+  id: string;
+  title: string;
+  text: string;
+  shock: CityShock;
+  scoreBefore: number; // run score
+  scoreAfter: number; // same scenario under the shock
+  nCritAfter: number;
+  suggestion?: Improvement; // best single swap under the shock, if any beats scoreAfter
+}
+
 export const BUDGET = 100;
 export const DECISIONS_COUNT = 5;
 export const DIRECTION_CAP = 2;

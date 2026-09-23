@@ -34,7 +34,7 @@ const trace = (events: ConsiliumEvent[]) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(optimize).mockReturnValue(fx.optimizer);
+  vi.mocked(optimize).mockResolvedValue(fx.optimizer);
   vi.mocked(runExperts).mockImplementation(async (_input, _usage, onOpinion) => {
     fx.opinions.forEach(onOpinion);
     return fx.opinions;
@@ -110,9 +110,7 @@ describe("runConsilium", () => {
   });
 
   it("continues with an empty optimizer result when optimize throws", async () => {
-    vi.mocked(optimize).mockImplementation(() => {
-      throw new Error("boom");
-    });
+    vi.mocked(optimize).mockRejectedValue(new Error("boom"));
     vi.mocked(review).mockResolvedValue(okReview);
     const { events, emit } = collect();
     const run = await runConsilium({ teamName: "T", scenario }, emit);

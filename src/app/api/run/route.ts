@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 // Shape and known ids only (validate() silently skips unknown ids); budget, count, conflicts are checked by it.
 const bodySchema = z.object({
-  teamName: z.string().trim().min(1).max(60),
+  teamName: z.string().trim().min(1).max(60).regex(/^[^\n\r]+$/, "one line"),
   scenario: z.object({
     decisions: z.array(
       z.object({

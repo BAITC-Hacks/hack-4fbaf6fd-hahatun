@@ -49,10 +49,10 @@ class StageTracker {
   }
 }
 
-function safeOptimize(scenario: Scenario, engine: EngineResult, stages: StageTracker): OptimizerResult {
+async function safeOptimize(scenario: Scenario, engine: EngineResult, stages: StageTracker): Promise<OptimizerResult> {
   stages.start("optimize");
   try {
-    const result = optimize(scenario);
+    const result = await optimize(scenario);
     stages.done();
     return result;
   } catch (err) {
@@ -122,11 +122,12 @@ export async function runConsilium(input: ConsiliumInput, emit: Emit): Promise<R
 
 async function runStages(teamName: string, scenario: Scenario, emit: Emit, stages: StageTracker): Promise<Run> {
   const usage = new LlmUsage();
+  const startedAt = Date.now();
 
   stages.start("engine");
   const engine = calculate(scenario);
   stages.done();
-  const optimizer = safeOptimize(scenario, engine, stages);
+  const optimizer = await safeOptimize(scenario, engine, stages);
   const { improvements } = optimizer;
   const facts = buildFacts(scenario, engine, optimizer);
   emit({ type: "engine", result: engine, facts });
@@ -162,7 +163,8 @@ async function runStages(teamName: string, scenario: Scenario, emit: Emit, stage
     reviews,
     resolution,
     llmEnabled: isLlmEnabled(),
-    usage: usage.summary(),
+    // wall-clock of the whole run, not the sum of LLM calls (which is 0 in fallback mode)
+    usage: { ...usage.summary(), durationMs: Date.now() - startedAt },
   };
   await saveRun(run);
   stages.done();
