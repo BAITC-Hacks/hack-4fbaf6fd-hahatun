@@ -130,7 +130,7 @@ export function bestSwap(decisions: Decision[], shock: CityShock, baseline: numb
       const next = decisions.map((d, j) => (j === i ? cand : d));
       if (!validate({ decisions: next }).ok) continue;
       const score = scoreOf(next, [shock]);
-      if (score <= baseline || (best && score <= best.score)) continue;
+      if (score <= baseline + 1e-9 || (best && score <= best.score)) continue;
       best = { decisions: next, score, change: `${label(decisions[i], false)} → ${label(cand, true)}` };
     }
   }

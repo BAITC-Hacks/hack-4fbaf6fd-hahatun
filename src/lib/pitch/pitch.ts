@@ -126,7 +126,7 @@ function buildReviewSection(run: Run): string {
     lines.push("");
     lines.push("Проваленные условия:");
     for (const c of failed) {
-      const reason = c.reason ? c.reason : "причина не указана";
+      const reason = c.reason ? oneLine(c.reason) : "причина не указана";
       lines.push(`- ${c.id}: ${reason}`);
     }
   }
@@ -139,13 +139,13 @@ function buildResolutionSection(run: Run): string {
   if (resolution.disputes.length > 0) {
     lines.push("", "**Споры:**");
     for (const dispute of resolution.disputes) {
-      lines.push(`- ${dispute.topic} — на стороне «${ROLE_LABELS[dispute.sideTaken]}»: ${dispute.reason}`);
+      lines.push(`- ${oneLine(dispute.topic)} — на стороне «${ROLE_LABELS[dispute.sideTaken]}»: ${oneLine(dispute.reason)}`);
     }
   }
   if (resolution.mandates.length > 0) {
     lines.push("", "**Поручения:**");
     for (const mandate of resolution.mandates) {
-      lines.push(`- ${mandate.text} (расчётный Score ${fmt(mandate.improvement.score)})`);
+      lines.push(`- ${oneLine(mandate.text)} (расчётный Score ${fmt(mandate.improvement.score)})`);
     }
   }
   return lines.join("\n");
@@ -164,9 +164,12 @@ function buildMethodologySection(run: Run): string {
   ].join("\n");
 }
 
+// Markdown structure must survive LLM/user text: collapse line breaks inside list items and headings.
+const oneLine = (text: string) => text.replace(/\s*\n+\s*/g, " ").trim();
+
 export function buildPitch(run: Run): string {
   const sections = [
-    `# Аким на 5 часов — сценарий команды «${run.teamName}»`,
+    `# Аким на 5 часов — сценарий команды «${oneLine(run.teamName)}»`,
     "",
     `${formatDate(run.createdAt)} · runId: \`${run.id}\``,
     "",

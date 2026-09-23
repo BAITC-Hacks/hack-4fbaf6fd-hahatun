@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { CONFLICTS, DISTRICTS, INDICATORS, MEASURES, MEASURE_BY_ID, SCORE_WEIGHTS, SYNERGIES, WEIGHTS } from "@/lib/data";
@@ -18,7 +19,12 @@ import {
 } from "@/lib/types";
 
 const EPS = 1e-9;
-const CACHE_VERSION = "v1";
+// Cache version is a fingerprint of the dataset and rules: editing measures, weights, synergies,
+// conflicts or the budget invalidates data/optimum.json automatically.
+const CACHE_VERSION = `v1-${createHash("sha256")
+  .update(JSON.stringify({ MEASURES, DISTRICTS, WEIGHTS, SCORE_WEIGHTS, SYNERGIES, CONFLICTS, BUDGET, DIRECTION_CAP }))
+  .digest("hex")
+  .slice(0, 12)}`;
 
 // ---------------------------------------------------------------------------
 // Precomputed tables: measures, districts and indicators as indices, effects as flat numbers.
@@ -236,13 +242,14 @@ interface CacheFile {
 }
 
 export function cachePath(): string {
-  return process.env.OPTIMUM_CACHE_PATH || path.join(process.cwd(), "data", "optimum.json");
+  return process.env.OPTIMUM_CACHE_PATH || path.join(/* turbopackIgnore: true */ process.cwd(), "data", "optimum.json");
 }
 
 async function readCache(file: string): Promise<Optimum | null> {
   try {
-    const raw = JSON.parse(await readFile(file, "utf8")) as Partial<CacheFile>;
+    const raw = JSON.parse(await readFile(/* turbopackIgnore: true */ file, "utf8")) as Partial<CacheFile>;
     if (raw.version !== CACHE_VERSION || !Array.isArray(raw.scores) || raw.scores.length !== raw.count) return null;
+    if (!raw.scores.every((x) => typeof x === "number" && Number.isFinite(x))) return null;
     if (typeof raw.bestScore !== "number" || !raw.bestScenario || !isValidFast(raw.bestScenario.decisions)) return null;
     return { scores: Float64Array.from(raw.scores), bestScore: raw.bestScore, bestScenario: raw.bestScenario, source: "disk" };
   } catch {

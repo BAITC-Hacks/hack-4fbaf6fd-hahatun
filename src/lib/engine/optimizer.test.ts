@@ -111,7 +111,7 @@ describe("full enumeration", () => {
     expect(existsSync(file)).toBe(true);
 
     const disk = JSON.parse(await readFile(file, "utf8"));
-    expect(disk.version).toBe("v1");
+    expect(disk.version).toMatch(/^v1-[0-9a-f]{12}$/);
     expect(disk.count).toBe(first.scores.length);
 
     resetOptimumMemory();
