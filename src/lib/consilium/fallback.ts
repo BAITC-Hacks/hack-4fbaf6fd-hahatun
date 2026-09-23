@@ -118,7 +118,19 @@ function directionRisk(role: Direction, v: DirectionView): { risk: string; sugge
   if (gains.length > 1 && gains[0] !== v.best) {
     return { risk: `${sentence(gains[0].text)} Даже после мер это самое слабое место направления, запас небольшой.` };
   }
-  return { risk: "Весь эффект направления держится на одной мере: если она запоздает, прироста не будет вовсе." };
+  const lag = soleMeasureLag(v);
+  if (lag === undefined) return { risk: "Весь эффект направления держится на одной мере: без неё прироста не будет вовсе." };
+  return {
+    risk: `Весь эффект направления держится на одной мере с лагом ${lag} ${quartersWord(lag)}: до её запуска прироста нет.`,
+  };
+}
+
+const quartersWord = (n: number) => (n === 1 ? "квартал" : n < 5 ? "квартала" : "кварталов");
+
+// The direction's only contribution fact reads "Вклад M5 «…» в Score: …"; its measure gives the lag.
+function soleMeasureLag(v: DirectionView): number | undefined {
+  const code = v.contrib[0]?.text.match(/\bM(?:1[0-4]|[1-9])\b/)?.[0];
+  return code ? MEASURE_BY_ID[code as MeasureId].lag : undefined;
 }
 
 function directionTradeoff(v: DirectionView, imp: Improvement | undefined): string {

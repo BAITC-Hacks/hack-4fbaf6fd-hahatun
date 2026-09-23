@@ -41,7 +41,7 @@ export default async function PlayPage({ searchParams }: PageProps<"/play">) {
     <>
       <PageHeader
         title="Кабинет решений"
-        lead="Выберите 5 мер в пределах 100 у.е. — Score пересчитывается сразу."
+        lead="Выберите ровно 5 решений в пределах 100 у.е. — Score пересчитывается сразу."
       />
       <Cabinet
         key={encodeDecisions(initial)}

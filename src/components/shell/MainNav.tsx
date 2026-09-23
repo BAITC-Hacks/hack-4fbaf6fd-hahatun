@@ -22,8 +22,8 @@ export function MainNav() {
   const onLeaderboard = pathname.startsWith("/leaderboard");
 
   return (
-    <nav aria-label="Навигация" className="flex items-center gap-4 text-sm">
-      <ol aria-label="Этапы игры" className="flex items-center gap-2">
+    <nav aria-label="Навигация" className="flex items-center gap-2 py-1 text-sm whitespace-nowrap sm:gap-4">
+      <ol aria-label="Этапы игры" className="flex items-center gap-0.5 sm:gap-2">
         {STEPS.map((step, i) => {
           const current = step.isCurrent(pathname);
           const inner = (
@@ -38,14 +38,20 @@ export function MainNav() {
               >
                 {i + 1}
               </span>
-              <span className={current ? "font-medium" : "text-muted-foreground group-hover:text-foreground"}>
+              {/* On phones only the current step keeps its label, so the row fits 320px. */}
+              <span
+                className={cn(
+                  current ? "font-medium" : "text-muted-foreground group-hover:text-foreground",
+                  !current && "sr-only sm:not-sr-only",
+                )}
+              >
                 {step.label}
               </span>
             </>
           );
           return (
             <li key={step.label} className="flex items-center gap-2">
-              {i > 0 && <span aria-hidden="true" className="h-px w-5 bg-input" />}
+              {i > 0 && <span aria-hidden="true" className="h-px w-2 bg-input sm:w-6" />}
               {step.href && !current ? (
                 <Link
                   href={step.href}

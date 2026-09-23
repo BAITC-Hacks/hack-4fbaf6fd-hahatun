@@ -8,6 +8,7 @@ import {
   type ValidationError,
   type ValidationResult,
 } from "@/lib/types";
+import { humanizeText } from "./humanize";
 import { EFFECT_LABELS } from "./labels";
 import { directionCounts } from "./scenario";
 
@@ -18,22 +19,13 @@ export interface CabinetSummary {
   directionCounts: Record<Direction, number>;
 }
 
-// "M7 «Школа…»" → "«Школа…»", bare "M3" → "«Линия ЛРТ / расширение»": the cabinet shows titles, not ids.
-const MEASURE_REF = /\b(M(?:1[0-4]|[1-9]))\b( «[^»]*»)?/g;
-
-export function humanizeMessage(message: string): string {
-  return message.replace(MEASURE_REF, (_, id: MeasureId, quoted?: string) =>
-    quoted ? quoted.trim() : `«${MEASURE_BY_ID[id].title}»`,
-  );
-}
-
 /** Live state of the set: validator on every change, engine score only once the set is valid. */
 export function summarizeSet(decisions: Decision[]): CabinetSummary {
   const validation = validate({ decisions });
   // An unfinished set is normal while picking; COUNT is shown only when the player goes over the limit.
   const errors = validation.errors
     .filter((e) => e.code !== "COUNT" || decisions.length > DECISIONS_COUNT)
-    .map((e) => ({ ...e, message: humanizeMessage(e.message) }));
+    .map((e) => ({ ...e, message: humanizeText(e.message) }));
   return {
     validation,
     score: validation.ok ? scoreOf(decisions) : null,

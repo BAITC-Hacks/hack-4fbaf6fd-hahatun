@@ -50,7 +50,10 @@ export function DistrictShape({ id, value, previous, selected, onSelect, onFocus
         stroke="var(--card)"
         strokeWidth={3}
         strokeLinejoin="round"
-        className={cn(button && "transition-opacity group-hover:opacity-85 motion-reduce:transition-none")}
+        className={cn(
+          button &&
+            "transition-opacity group-hover:opacity-85 group-focus-visible:stroke-ring group-focus-visible:[stroke-width:5] motion-reduce:transition-none",
+        )}
       />
       <text x={x} y={top} textAnchor="middle" className="fill-foreground text-[12px] font-medium">
         {name}
