@@ -2,6 +2,7 @@
 
 import { Check, ChevronDown } from "lucide-react";
 import { useId, useState } from "react";
+import type { Dataset } from "@/lib/dataset";
 import type { DistrictId, Indicator, Measure } from "@/lib/types";
 import type { RelationHint } from "@/lib/ui/cabinet";
 import { formatDelta } from "@/lib/ui/format";
@@ -12,6 +13,7 @@ import { RowNotes } from "./RowNotes";
 
 export interface MeasureRowProps {
   measure: Measure;
+  ds: Dataset;
   selected: boolean;
   districtId?: DistrictId;
   hints: RelationHint[]; // synergy/conflict notes against the current set only
@@ -38,7 +40,16 @@ function mainEffect(measure: Measure): string {
   return `${formatDelta(value, 0)} ${EFFECT_LABELS[code]}`;
 }
 
-export function MeasureRow({ measure, selected, districtId, hints, blockedReason, onToggle, onDistrictChange }: MeasureRowProps) {
+export function MeasureRow({
+  measure,
+  ds,
+  selected,
+  districtId,
+  hints,
+  blockedReason,
+  onToggle,
+  onDistrictChange,
+}: MeasureRowProps) {
   const [open, setOpen] = useState(false);
   const detailsId = useId();
   const blocked = Boolean(blockedReason) && !selected;
@@ -51,7 +62,9 @@ export function MeasureRow({ measure, selected, districtId, hints, blockedReason
           </span>
           <span className={cn("leading-snug", selected && "font-medium")}>
             {measure.title}
-            {measure.scope === "city" && <span className="text-sm font-normal text-muted-foreground"> · весь город</span>}
+            {measure.scope === "city" && (
+              <span className="text-sm font-normal text-muted-foreground"> · весь город</span>
+            )}
           </span>
           <span className="col-start-2 row-start-2 text-sm text-muted-foreground sm:col-start-auto sm:row-start-auto">
             {mainEffect(measure)}
@@ -80,7 +93,7 @@ export function MeasureRow({ measure, selected, districtId, hints, blockedReason
         hints={hints}
         onDistrictChange={onDistrictChange}
       />
-      <MeasureDetails id={detailsId} measure={measure} open={open} />
+      <MeasureDetails id={detailsId} measure={measure} ds={ds} open={open} />
     </li>
   );
 }

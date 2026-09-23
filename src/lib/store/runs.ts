@@ -3,7 +3,7 @@ import path from "node:path";
 import type { Run } from "@/lib/types";
 
 // JSON files in data/runs/<id>.json (override with DATA_DIR).
-export type RunSummary = Pick<Run, "id" | "teamName" | "createdAt">;
+export type RunSummary = Pick<Run, "id" | "teamName" | "createdAt"> & { sandbox: boolean };
 
 const ID_RE = /^[A-Za-z0-9_-]+$/;
 
@@ -41,7 +41,7 @@ async function readSummary(file: string): Promise<RunSummary | null> {
     if (typeof run.id !== "string" || typeof run.teamName !== "string" || typeof run.createdAt !== "string") {
       return null;
     }
-    return { id: run.id, teamName: run.teamName, createdAt: run.createdAt };
+    return { id: run.id, teamName: run.teamName, createdAt: run.createdAt, sandbox: Boolean(run.sandbox) };
   } catch {
     return null; // broken file: skip it, the list must still render
   }

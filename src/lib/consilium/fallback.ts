@@ -1,4 +1,6 @@
-import { DISTRICTS, INDICATOR_DIRECTION, MEASURE_BY_ID, MEASURES } from "@/lib/data";
+import { INDICATOR_DIRECTION } from "@/lib/data";
+import { DEFAULT_DATASET, type Dataset } from "@/lib/dataset";
+import { measureIndex } from "@/lib/engine/engine";
 import {
   DIRECTION_LABELS,
   DISTRICT_LABELS,
@@ -11,7 +13,6 @@ import {
   type Fact,
   type Improvement,
   type Indicator,
-  type MeasureId,
   type Scenario,
 } from "@/lib/types";
 import { EXPERT_NAMES, EXPERT_ROLES } from "./prompts";
@@ -23,6 +24,7 @@ export interface FallbackInput {
   scenario: Scenario;
   facts: Fact[];
   improvements: Improvement[];
+  dataset?: Dataset; // sandbox runs; the case data otherwise
 }
 
 const kind = {
@@ -53,14 +55,16 @@ export function factsForRole(role: ExpertRole, facts: Fact[]): Fact[] {
   return facts.filter((f) => f.scope === role || f.scope === "general");
 }
 
+const DISTRICT_COUNT = DEFAULT_DATASET.districts.length;
+
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 const sentence = (s: string) => (/[.!?]$/.test(s) ? s : `${s}.`);
 const refs = (...fs: (Fact | undefined)[]) => [...new Set(fs.filter((f): f is Fact => !!f).map((f) => f.id))];
 
 // Worst baseline indicator of a direction, named without its value (the value is not a fact).
-function worstIndicator(dir: Direction): { indicator: Indicator; districtId: Decision["districtId"] } {
-  let best = { indicator: "T1" as Indicator, districtId: DISTRICTS[0].id, value: Infinity };
-  for (const d of DISTRICTS) {
+function worstIndicator(dir: Direction, ds: Dataset): { indicator: Indicator; districtId: Decision["districtId"] } {
+  let best = { indicator: "T1" as Indicator, districtId: ds.districts[0].id, value: Infinity };
+  for (const d of ds.districts) {
     for (const k of Object.keys(d.indicators) as Indicator[]) {
       if (INDICATOR_DIRECTION[k] === dir && d.indicators[k] < best.value) best = { indicator: k, districtId: d.id, value: d.indicators[k] };
     }
@@ -69,8 +73,8 @@ function worstIndicator(dir: Direction): { indicator: Indicator; districtId: Dec
 }
 
 // Measure of the direction with the strongest effect on the given indicator.
-function suggestFor(dir: Direction, indicator: Indicator, districtId: Decision["districtId"]): Decision | undefined {
-  const m = MEASURES.filter((x) => x.direction === dir).sort((a, b) => (b.effects[indicator] ?? 0) - (a.effects[indicator] ?? 0))[0];
+function suggestFor(dir: Direction, indicator: Indicator, districtId: Decision["districtId"], ds: Dataset): Decision | undefined {
+  const m = ds.measures.filter((x) => x.direction === dir).sort((a, b) => (b.effects[indicator] ?? 0) - (a.effects[indicator] ?? 0))[0];
   if (!m) return undefined;
   return m.scope === "district" ? { measureId: m.id, districtId } : { measureId: m.id };
 }
@@ -103,22 +107,22 @@ function viewOf(role: Direction, facts: Fact[]): DirectionView {
 const indicatorsOf = (dir: Direction) =>
   (Object.keys(INDICATOR_DIRECTION) as Indicator[]).filter((k) => INDICATOR_DIRECTION[k] === dir).join(" и ");
 
-function directionRisk(role: Direction, v: DirectionView): { risk: string; suggestion?: Decision } {
+function directionRisk(role: Direction, v: DirectionView, ds: Dataset): { risk: string; suggestion?: Decision } {
   if (v.critical) return { risk: `${sentence(v.critical.text)} Штраф за критическое значение сохраняется весь горизонт.` };
   if (v.worse) return { risk: `${sentence(v.worse.text)} Показатель проседает из-за мер соседних направлений.` };
   if (v.unchanged || !v.best) {
-    const w = worstIndicator(role);
+    const w = worstIndicator(role, ds);
     const where = DISTRICT_LABELS[w.districtId!];
     return {
       risk: `Худший показатель направления — ${w.indicator} (${INDICATOR_LABELS[w.indicator].toLowerCase()}) в районе ${where}, и он остаётся без поддержки весь горизонт.`,
-      suggestion: suggestFor(role, w.indicator, w.districtId),
+      suggestion: suggestFor(role, w.indicator, w.districtId, ds),
     };
   }
   const gains = v.changes.filter((f) => factDelta(f) > 0).sort((a, b) => (a.value ?? 0) - (b.value ?? 0));
   if (gains.length > 1 && gains[0] !== v.best) {
     return { risk: `${sentence(gains[0].text)} Даже после мер это самое слабое место направления, запас небольшой.` };
   }
-  const lag = soleMeasureLag(v);
+  const lag = soleMeasureLag(v, ds);
   if (lag === undefined) return { risk: "Весь эффект направления держится на одной мере: без неё прироста не будет вовсе." };
   return {
     risk: `Весь эффект направления держится на одной мере с лагом ${lag} ${quartersWord(lag)}: до её запуска прироста нет.`,
@@ -128,9 +132,9 @@ function directionRisk(role: Direction, v: DirectionView): { risk: string; sugge
 const quartersWord = (n: number) => (n === 1 ? "квартал" : n < 5 ? "квартала" : "кварталов");
 
 // The direction's only contribution fact reads "Вклад M5 «…» в Score: …"; its measure gives the lag.
-function soleMeasureLag(v: DirectionView): number | undefined {
+function soleMeasureLag(v: DirectionView, ds: Dataset): number | undefined {
   const code = v.contrib[0]?.text.match(/\bM(?:1[0-4]|[1-9])\b/)?.[0];
-  return code ? MEASURE_BY_ID[code as MeasureId].lag : undefined;
+  return code ? measureIndex(ds).get(code)?.lag : undefined;
 }
 
 function directionTradeoff(v: DirectionView, imp: Improvement | undefined): string {
@@ -140,7 +144,7 @@ function directionTradeoff(v: DirectionView, imp: Improvement | undefined): stri
       : `Деньги ушли в другие направления, и без замены одной из мер «${v.label}» ничего не получит.`;
   }
   const districts = [...new Set(v.changes.map((f) => f.text.split(" ")[0]))];
-  if (districts.length >= DISTRICTS.length) {
+  if (districts.length >= DISTRICT_COUNT) {
     return "Эффект размазан по всем районам тонким слоем: точечно ни один провал направления не закрыт.";
   }
   return `Эффект сосредоточен в ${districts.length > 1 ? "районах" : "районе"} ${districts.join(", ")}, остальные районы по направлению «${v.label}» не получают ничего.`;
@@ -151,7 +155,7 @@ function directionOpinion(role: Direction, input: FallbackInput): ExpertOpinion 
   const summary = v.best
     ? `${sentence(v.best.text)} ${v.contrib[0] ? sentence(v.contrib[0].text) : "Прямых мер направления в наборе нет, это побочный эффект."}`
     : `Мер направления «${v.label}» в наборе нет: ${indicatorsOf(role)} не сдвинулись ни в одном районе.`;
-  const { risk, suggestion } = directionRisk(role, v);
+  const { risk, suggestion } = directionRisk(role, v, input.dataset ?? DEFAULT_DATASET);
   const concern = Boolean(v.unchanged || v.critical || v.worse);
   return {
     role,
@@ -167,9 +171,10 @@ function directionOpinion(role: Direction, input: FallbackInput): ExpertOpinion 
 
 function financeOpinion(input: FallbackInput): ExpertOpinion {
   const own = factsForRole("finance", input.facts);
+  const byId = measureIndex(input.dataset ?? DEFAULT_DATASET);
   const cost = own.find(kind.cost);
   // Ranked by contribution per unit of cost (the ratio itself is not quoted, only the facts).
-  const perCost = (f: Fact) => factDelta(f) / (MEASURE_BY_ID[f.text.match(/^Вклад (M\d+)/)?.[1] as MeasureId]?.cost ?? 1);
+  const perCost = (f: Fact) => factDelta(f) / (byId.get(f.text.match(/^Вклад (M\d+)/)?.[1] ?? "")?.cost ?? 1);
   const contrib = own.filter(kind.contribution).sort((a, b) => perCost(b) - perCost(a));
   const top = contrib[0];
   const low = contrib.at(-1);

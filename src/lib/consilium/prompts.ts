@@ -1,4 +1,5 @@
-import { MEASURE_BY_ID } from "@/lib/data";
+import { DEFAULT_DATASET, type Dataset } from "@/lib/dataset";
+import { measureIndex } from "@/lib/engine/engine";
 import {
   DISTRICT_LABELS,
   type Decision,
@@ -48,8 +49,8 @@ export function expertSystemPrompt(role: ExpertRole): string {
 }
 
 // withCost: experts may quote dataset costs; the synthesizer must not (its text is checked against facts only).
-export function decisionLabel(d: Decision, withCost = false): string {
-  const m = MEASURE_BY_ID[d.measureId];
+export function decisionLabel(d: Decision, withCost = false, ds: Dataset = DEFAULT_DATASET): string {
+  const m = measureIndex(ds).get(d.measureId);
   const where = d.districtId ? DISTRICT_LABELS[d.districtId] : "весь город";
   const meta = withCost && m ? `${m.direction}, стоимость ${m.cost}` : (m?.direction ?? "?");
   return `${d.measureId} «${m?.title ?? d.measureId}» (${meta}) — ${where}`;
@@ -64,10 +65,10 @@ function improvementLines(improvements: Improvement[]): string {
   return improvements.map((imp, i) => `№${i + 1}: ${imp.change}, Score ${r2(imp.score)} (${imp.delta >= 0 ? "+" : "−"}${Math.abs(r2(imp.delta))})`).join("\n");
 }
 
-export function expertUserPrompt(scenario: Scenario, facts: Fact[], improvements: Improvement[]): string {
+export function expertUserPrompt(scenario: Scenario, facts: Fact[], improvements: Improvement[], ds: Dataset = DEFAULT_DATASET): string {
   return [
     "Сценарий (5 мер):",
-    scenario.decisions.map((d) => `- ${decisionLabel(d, true)}`).join("\n"),
+    scenario.decisions.map((d) => `- ${decisionLabel(d, true, ds)}`).join("\n"),
     "",
     "Факты (единственный источник чисел):",
     factLines(facts),
@@ -116,10 +117,11 @@ export function synthUserPrompt(input: {
   opinions: ExpertOpinion[];
   improvements: Improvement[];
   previous?: { draft: { text: string; recommendation: { text: string } }; failed: ReviewCondition[] };
+  dataset?: Dataset;
 }): string {
   return [
     "Сценарий (5 мер):",
-    input.scenario.decisions.map((d) => `- ${decisionLabel(d)}`).join("\n"),
+    input.scenario.decisions.map((d) => `- ${decisionLabel(d, false, input.dataset)}`).join("\n"),
     "",
     "Факты (единственный источник чисел):",
     factLines(input.facts),

@@ -2,6 +2,7 @@
 
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { Dataset } from "@/lib/dataset";
 import type { Decision, MeasureId, ValidationError } from "@/lib/types";
 import { BudgetBar } from "./BudgetBar";
 import { LiveScore } from "./LiveScore";
@@ -10,6 +11,7 @@ import { ValidationErrors } from "./ValidationErrors";
 
 export interface SetPanelProps {
   decisions: Decision[];
+  ds: Dataset;
   cost: number;
   errors: ValidationError[];
   score: number | null; // engine score on the client, null while invalid
@@ -44,7 +46,7 @@ export function SetPanel(props: SetPanelProps) {
       </div>
       <LiveScore score={score} baseScore={baseScore} />
       <BudgetBar cost={cost} />
-      <SlotList decisions={decisions} onRemove={props.onRemove} />
+      <SlotList decisions={decisions} ds={props.ds} onRemove={props.onRemove} />
       <ValidationErrors errors={errors} />
       <Button size="lg" className="h-10" disabled={!canSubmit || submitting} onClick={props.onSubmit}>
         {submitting ? "Отправляем…" : "На консилиум"}

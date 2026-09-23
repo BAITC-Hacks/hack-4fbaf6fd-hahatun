@@ -8,6 +8,7 @@ import { runExperts } from "./experts";
 import { review } from "./reviewers";
 import { synthesize } from "./synthesizer";
 import { runConsilium } from "./pipeline";
+import { DEFAULT_DATASET } from "@/lib/dataset";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/engine/optimizer", () => ({ optimize: vi.fn() }));
@@ -131,5 +132,22 @@ describe("runConsilium", () => {
     ]);
     expect(saveRun).not.toHaveBeenCalled();
     expect(events.some((e) => e.type === "done")).toBe(false);
+  });
+
+  it("passes a sandbox dataset through and marks the saved run", async () => {
+    vi.mocked(review).mockResolvedValue(okReview);
+    const dataset = { ...structuredClone(DEFAULT_DATASET), name: "Песочница" };
+    dataset.districts.find((d) => d.id === "nura")!.indicators.S1 = 60;
+    const run = await runConsilium({ teamName: "Демо", scenario, dataset }, collect().emit);
+    expect(run?.sandbox?.datasetName).toBe("Песочница");
+    expect(vi.mocked(optimize).mock.calls[0][1]).toBe(dataset);
+    expect(vi.mocked(runExperts).mock.calls[0][0].dataset).toBe(dataset);
+    expect(vi.mocked(review).mock.calls[0][0].dataset).toBe(dataset);
+  });
+
+  it("does not mark competition runs as sandbox", async () => {
+    vi.mocked(review).mockResolvedValue(okReview);
+    const run = await runConsilium({ teamName: "Демо", scenario, dataset: DEFAULT_DATASET }, collect().emit);
+    expect(run?.sandbox).toBeUndefined();
   });
 });

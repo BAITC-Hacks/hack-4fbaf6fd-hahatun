@@ -1,21 +1,24 @@
 "use client";
 
 import { X } from "lucide-react";
-import { MEASURE_BY_ID } from "@/lib/data";
+import type { Dataset } from "@/lib/dataset";
 import { DECISIONS_COUNT, DISTRICT_LABELS, type Decision, type MeasureId } from "@/lib/types";
+import { measureById } from "@/lib/ui/cabinet";
 
 interface SlotListProps {
   decisions: Decision[];
+  ds: Dataset;
   onRemove(id: MeasureId): void;
 }
 
 /** Five numbered slots: chosen measures in pick order, then empty ones. */
-export function SlotList({ decisions, onRemove }: SlotListProps) {
+export function SlotList({ decisions, ds, onRemove }: SlotListProps) {
+  const byId = measureById(ds);
   const slots = Array.from({ length: Math.max(DECISIONS_COUNT, decisions.length) }, (_, i) => decisions[i]);
   return (
     <ol aria-label="Выбранные меры" className="divide-y divide-border border-y border-border">
       {slots.map((d, i) => {
-        const measure = d && MEASURE_BY_ID[d.measureId];
+        const measure = d && byId[d.measureId];
         return (
           <li key={d?.measureId ?? `empty-${i}`} className="flex min-h-11 items-center gap-3 py-1.5 text-sm">
             <span className="w-3 shrink-0 text-muted-foreground tabular-nums">{i + 1}</span>

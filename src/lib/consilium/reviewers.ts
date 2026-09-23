@@ -1,11 +1,12 @@
 import "server-only";
 import { z } from "zod";
 import { scoreOf, validate } from "@/lib/engine";
+import type { Dataset } from "@/lib/dataset";
 import { REVIEW_PASS_THRESHOLD, type Draft, type Fact, type Review, type ReviewCondition } from "@/lib/types";
 import { callStructured, isLlmEnabled, type LlmUsage } from "./llm";
 import { allowedNumbers, foreignNumbers, sentenceWith } from "./numbers";
 
-export interface ReviewInput { draft: Draft; facts: Fact[]; userScore: number; round: number }
+export interface ReviewInput { draft: Draft; facts: Fact[]; userScore: number; round: number; dataset?: Dataset }
 
 export const REVIEW_PROMPT_VERSION = "review-v1";
 
@@ -69,7 +70,7 @@ export function checkNumbers(input: Pick<ReviewInput, "draft" | "facts">): Revie
 }
 
 // C2: the recommended improvement is a valid scenario that beats the user's score.
-export function checkRecommendation(input: Pick<ReviewInput, "draft" | "facts" | "userScore">): ReviewCondition {
+export function checkRecommendation(input: Pick<ReviewInput, "draft" | "facts" | "userScore" | "dataset">): ReviewCondition {
   const fail = (reason: string): ReviewCondition => ({ id: "C2", by: "code", passed: false, reason });
   const improvement = input.draft.recommendation.improvement;
   if (!improvement) {
@@ -77,9 +78,9 @@ export function checkRecommendation(input: Pick<ReviewInput, "draft" | "facts" |
     if (hasImprovements) return fail("Оптимизатор нашёл улучшения, но рекомендация не содержит ни одного");
     return { id: "C2", by: "code", passed: true, reason: "Улучшений не найдено, рекомендация не требуется" };
   }
-  const validation = validate(improvement.scenario);
+  const validation = validate(improvement.scenario, input.dataset);
   if (!validation.ok) return fail(`Рекомендованный набор невалиден: ${validation.errors.map((e) => e.message).join("; ")}`);
-  const score = scoreOf(improvement.scenario.decisions);
+  const score = scoreOf(improvement.scenario.decisions, [], input.dataset);
   const fmt = (x: number) => String(Math.round(x * 100) / 100);
   if (score <= input.userScore) return fail(`Рекомендация не лучше исходного набора: ${fmt(score)} ≤ ${fmt(input.userScore)}`);
   return { id: "C2", by: "code", passed: true, reason: `Рекомендация валидна, ${fmt(score)} > ${fmt(input.userScore)}` };

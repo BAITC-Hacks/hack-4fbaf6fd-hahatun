@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { MEASURE_BY_ID } from "@/lib/data";
+import type { Dataset } from "@/lib/dataset";
 import type { Decision, DistrictId, ExpertOpinion, ExpertRole, Fact, Improvement, MeasureId, Scenario } from "@/lib/types";
 import { fallbackOpinion, fallbackOpinions, factsForRole } from "./fallback";
 import { callStructured, isLlmEnabled, type LlmUsage } from "./llm";
 import { EXPERT_NAMES, EXPERT_PROMPT_VERSION, EXPERT_ROLES, expertSystemPrompt, expertUserPrompt } from "./prompts";
 
-export interface ExpertsInput { scenario: Scenario; facts: Fact[]; improvements: Improvement[] }
+export interface ExpertsInput { scenario: Scenario; facts: Fact[]; improvements: Improvement[]; dataset?: Dataset }
 
 const MEASURE_IDS = Object.keys(MEASURE_BY_ID) as [MeasureId, ...MeasureId[]];
 const DISTRICT_IDS: [DistrictId, ...DistrictId[]] = ["esil", "almaty", "saryarka", "baikonur", "nura"];
@@ -31,9 +32,12 @@ export function filterFactRefs(refs: string[], allowed: Fact[]): string[] {
 }
 
 // Keeps a suggestion only if the measure exists and the district matches its scope.
-export function sanitizeSuggestion(s: { measureId: string; districtId?: string | null } | null | undefined): Decision | undefined {
+export function sanitizeSuggestion(
+  s: { measureId: string; districtId?: string | null } | null | undefined,
+  ds?: Dataset,
+): Decision | undefined {
   if (!s) return undefined;
-  const m = MEASURE_BY_ID[s.measureId as MeasureId];
+  const m = ds ? ds.measures.find((x) => x.id === s.measureId) : MEASURE_BY_ID[s.measureId as MeasureId];
   if (!m) return undefined;
   const districtId = s.districtId ?? undefined;
   if (m.scope === "district") {
@@ -43,8 +47,8 @@ export function sanitizeSuggestion(s: { measureId: string; districtId?: string |
   return districtId ? undefined : { measureId: m.id };
 }
 
-export function toOpinion(role: ExpertRole, answer: ExpertAnswer, allowed: Fact[]): ExpertOpinion {
-  const suggestion = sanitizeSuggestion(answer.suggestion);
+export function toOpinion(role: ExpertRole, answer: ExpertAnswer, allowed: Fact[], ds?: Dataset): ExpertOpinion {
+  const suggestion = sanitizeSuggestion(answer.suggestion, ds);
   return {
     role,
     name: EXPERT_NAMES[role],
@@ -65,13 +69,13 @@ async function askExpert(role: ExpertRole, input: ExpertsInput, usage: LlmUsage)
         role: `expert:${role}`,
         tier: "expert",
         system: expertSystemPrompt(role),
-        prompt: expertUserPrompt(input.scenario, facts, input.improvements),
+        prompt: expertUserPrompt(input.scenario, facts, input.improvements, input.dataset),
         schema: expertAnswerSchema,
         promptVersion: EXPERT_PROMPT_VERSION,
       },
       usage,
     );
-    return toOpinion(role, answer, facts);
+    return toOpinion(role, answer, facts, input.dataset);
   } catch {
     // The failure is already recorded in usage.traces by callStructured; one expert must not sink the rest.
     return fallbackOpinion(role, input);

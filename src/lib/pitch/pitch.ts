@@ -1,5 +1,5 @@
 import { MEASURE_BY_ID } from "@/lib/data/measures";
-import { BUDGET, CRITICAL_THRESHOLD, DISTRICT_LABELS, type Run } from "@/lib/types";
+import { BUDGET, CRITICAL_THRESHOLD, DISTRICT_LABELS, type Measure, type MeasureId, type Run } from "@/lib/types";
 import { OUTCOME_LABELS, ROLE_LABELS } from "@/lib/ui/labels";
 import { llmStatus } from "@/lib/ui/llm-status";
 
@@ -46,13 +46,20 @@ function stanceLabel(stance: "support" | "concern"): string {
   return stance === "support" ? "за" : "против";
 }
 
+// Sandbox runs carry their own dataset: measure titles and costs come from it.
+function measuresOf(run: Run): Record<MeasureId, Measure> {
+  if (!run.sandbox) return MEASURE_BY_ID;
+  return Object.fromEntries(run.sandbox.dataset.measures.map((m) => [m.id, m])) as Record<MeasureId, Measure>;
+}
+
 function buildDecisionsSection(run: Run): string {
+  const measures = measuresOf(run);
   const rows = run.scenario.decisions.map((decision) => {
-    const measure = MEASURE_BY_ID[decision.measureId];
+    const measure = measures[decision.measureId];
     const district = decision.districtId ? DISTRICT_LABELS[decision.districtId] : "весь город";
     return `| ${measure.id} | ${measure.title} | ${district} | ${measure.cost} |`;
   });
-  const totalCost = run.scenario.decisions.reduce((sum, d) => sum + MEASURE_BY_ID[d.measureId].cost, 0);
+  const totalCost = run.scenario.decisions.reduce((sum, d) => sum + measures[d.measureId].cost, 0);
   const remaining = BUDGET - totalCost;
   return [
     "## Решения",
@@ -171,7 +178,9 @@ const oneLine = (text: string) => text.replace(/\s*\n+\s*/g, " ").trim();
 
 export function buildPitch(run: Run): string {
   const sections = [
-    `# Аким на 5 часов — сценарий команды «${oneLine(run.teamName)}»`,
+    `# Аким на 5 часов — сценарий команды «${oneLine(run.teamName)}»${
+      run.sandbox ? ` (песочница: ${oneLine(run.sandbox.datasetName)})` : ""
+    }`,
     "",
     `${formatDate(run.createdAt)} · runId: \`${run.id}\``,
     "",

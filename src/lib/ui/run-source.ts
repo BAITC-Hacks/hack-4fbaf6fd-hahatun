@@ -25,6 +25,7 @@ export interface RunSummary {
   reviewPassed: number;
   llmEnabled: boolean;
   isSample: boolean;
+  sandbox: boolean;
 }
 
 export function toSummary(run: Run, isSample = false): RunSummary {
@@ -38,6 +39,7 @@ export function toSummary(run: Run, isSample = false): RunSummary {
     percentile: run.optimizer.percentile,
     weakestDistrict: run.engine.minDistrict.id,
     reviewPassed: run.reviews.at(-1)?.passed ?? 0,
+    sandbox: Boolean(run.sandbox),
     llmEnabled: run.llmEnabled,
     isSample,
   };
@@ -60,7 +62,8 @@ async function readStoredSummaries(): Promise<RunSummary[]> {
 
 /** All stored runs, best Score first. Falls back to the fixture so the page is never blank in dev. */
 export async function listRuns(): Promise<RunSummary[]> {
-  const stored = await readStoredSummaries();
+  // sandbox runs never compete; filter before the fixture fallback so the page is never blank
+  const stored = (await readStoredSummaries()).filter((s) => !s.sandbox);
   const list = stored.length > 0 ? stored : [toSummary(sample as Run, true)];
   return list.sort((a, b) => b.score - a.score);
 }

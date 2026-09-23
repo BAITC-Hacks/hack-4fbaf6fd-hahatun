@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { Dataset } from "@/lib/dataset";
 import type { DistrictId, DistrictResult, Scenario } from "@/lib/types";
 import { DISTRICT_LABELS, HORIZON_QUARTERS } from "@/lib/types";
 import { quarterView } from "@/lib/ui/timeline";
@@ -22,10 +23,16 @@ function dOf(districts: DistrictResult[], key: "dBefore" | "dAfter") {
 
 // District map and switcher with radar and indicator table for the selected district; the quarter slider
 // replays "after" quarter by quarter, "before" stays the baseline. Quarter 8 is the engine result.
-export function DistrictComparison({ districts: final, scenario }: { districts: DistrictResult[]; scenario: Scenario }) {
+interface DistrictComparisonProps {
+  districts: DistrictResult[];
+  scenario: Scenario;
+  dataset?: Dataset; // sandbox run: replay quarters on its own data
+}
+
+export function DistrictComparison({ districts: final, scenario, dataset }: DistrictComparisonProps) {
   const [selected, setSelected] = useState<DistrictId>(() => mostChanged(final));
   const [quarter, setQuarter] = useState(HORIZON_QUARTERS);
-  const view = useMemo(() => quarterView(final, scenario, quarter), [final, scenario, quarter]);
+  const view = useMemo(() => quarterView(final, scenario, quarter, dataset), [final, scenario, quarter, dataset]);
   const districts = view.districts;
   const district = districts.find((d) => d.id === selected) ?? districts[0];
   return (

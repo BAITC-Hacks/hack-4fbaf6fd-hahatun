@@ -202,6 +202,8 @@ export interface Run {
   resolution: Resolution;
   llmEnabled: boolean;
   usage: RunUsage;
+  /** Sandbox run on an imported dataset; absent for competition runs on the case data. */
+  sandbox?: { datasetName: string; dataset: import("@/lib/dataset").Dataset };
 }
 
 // A14: an unexpected city event applied on top of a finished run (deterministic per run id).

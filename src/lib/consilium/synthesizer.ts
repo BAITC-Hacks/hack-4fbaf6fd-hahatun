@@ -7,6 +7,7 @@ import type {
   ReviewCondition,
   Scenario,
 } from "@/lib/types";
+import type { Dataset } from "@/lib/dataset";
 import { fallbackDraft } from "./fallback";
 import { callStructured, isLlmEnabled, type LlmUsage } from "./llm";
 import {
@@ -21,6 +22,7 @@ export interface SynthInput {
   opinions: ExpertOpinion[];
   improvements: Improvement[];
   previous?: { draft: Draft; failed: ReviewCondition[] }; // present on revision rounds
+  dataset?: Dataset; // sandbox runs; the case data otherwise
 }
 
 // Field order (plan.md §7): lists first, then recommendation, then the free text.

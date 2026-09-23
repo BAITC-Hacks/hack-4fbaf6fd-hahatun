@@ -1,5 +1,5 @@
-import { DISTRICTS, MEASURES, MEASURE_BY_ID } from "@/lib/data";
-import { calculate, scoreOf } from "./engine";
+import { DEFAULT_DATASET, type Dataset } from "@/lib/dataset";
+import { calculate, measureIndex, scoreOf } from "./engine";
 import { validate } from "./validator";
 import {
   DISTRICT_LABELS,
@@ -98,40 +98,46 @@ export function pickEventIndex(id: string): number {
 type AfterValues = Record<DistrictId, Record<Indicator, number>>;
 
 // Ties go to the district listed first in DISTRICTS (stable sort).
-export function pickDistrict(tpl: EventTemplate, after: AfterValues): DistrictId {
-  const sorted = [...DISTRICTS].sort((a, b) => after[a.id][tpl.indicator] - after[b.id][tpl.indicator]);
+export function pickDistrict(tpl: EventTemplate, after: AfterValues, ds: Dataset = DEFAULT_DATASET): DistrictId {
+  const sorted = [...ds.districts].sort((a, b) => after[a.id][tpl.indicator] - after[b.id][tpl.indicator]);
   if (tpl.target === "min") return sorted[0].id;
   const [first, second] = sorted;
   return second.population > first.population ? second.id : first.id;
 }
 
-function buildCandidates(): Decision[] {
+function buildCandidates(ds: Dataset): Decision[] {
   const list: Decision[] = [];
-  for (const m of MEASURES) {
+  for (const m of ds.measures) {
     if (m.scope === "city") list.push({ measureId: m.id });
-    else for (const d of DISTRICTS) list.push({ measureId: m.id, districtId: d.id });
+    else for (const d of ds.districts) list.push({ measureId: m.id, districtId: d.id });
   }
   return list;
 }
 
-const CANDIDATES = buildCandidates();
+const CANDIDATES = buildCandidates(DEFAULT_DATASET);
 
-function label(d: Decision, withTitle: boolean): string {
-  const m = MEASURE_BY_ID[d.measureId];
+function label(d: Decision, withTitle: boolean, ds: Dataset): string {
+  const m = measureIndex(ds).get(d.measureId)!;
   const where = d.districtId ? DISTRICT_LABELS[d.districtId] : "город";
   return withTitle ? `${m.id} ${m.title}, ${where}` : `${m.id} ${where}`;
 }
 
 // Best single-decision swap under the shock that strictly beats the shocked score.
-export function bestSwap(decisions: Decision[], shock: CityShock, baseline: number): Improvement | undefined {
+export function bestSwap(
+  decisions: Decision[],
+  shock: CityShock,
+  baseline: number,
+  ds: Dataset = DEFAULT_DATASET,
+): Improvement | undefined {
+  const candidates = ds === DEFAULT_DATASET ? CANDIDATES : buildCandidates(ds);
   let best: { decisions: Decision[]; score: number; change: string } | undefined;
   for (let i = 0; i < decisions.length; i++) {
-    for (const cand of CANDIDATES) {
+    for (const cand of candidates) {
       const next = decisions.map((d, j) => (j === i ? cand : d));
-      if (!validate({ decisions: next }).ok) continue;
-      const score = scoreOf(next, [shock]);
+      if (!validate({ decisions: next }, ds).ok) continue;
+      const score = scoreOf(next, [shock], ds);
       if (score <= baseline + 1e-9 || (best && score <= best.score)) continue;
-      best = { decisions: next, score, change: `${label(decisions[i], false)} → ${label(cand, true)}` };
+      best = { decisions: next, score, change: `${label(decisions[i], false, ds)} → ${label(cand, true, ds)}` };
     }
   }
   if (!best) return undefined;
@@ -139,12 +145,13 @@ export function bestSwap(decisions: Decision[], shock: CityShock, baseline: numb
 }
 
 export function buildEvent(run: Run): CityEvent {
+  const ds = run.sandbox?.dataset ?? DEFAULT_DATASET;
   const tpl = EVENT_CATALOGUE[pickEventIndex(run.id)];
   const after = Object.fromEntries(run.engine.districts.map((d) => [d.id, d.after])) as AfterValues;
-  const shock: CityShock = { districtId: pickDistrict(tpl, after), indicator: tpl.indicator, delta: tpl.delta };
+  const shock: CityShock = { districtId: pickDistrict(tpl, after, ds), indicator: tpl.indicator, delta: tpl.delta };
   const decisions = run.scenario.decisions;
-  const scoreAfter = scoreOf(decisions, [shock]);
-  const suggestion = bestSwap(decisions, shock, scoreAfter);
+  const scoreAfter = scoreOf(decisions, [shock], ds);
+  const suggestion = bestSwap(decisions, shock, scoreAfter, ds);
   return {
     id: tpl.id,
     title: tpl.title,
@@ -152,7 +159,7 @@ export function buildEvent(run: Run): CityEvent {
     shock,
     scoreBefore: run.engine.score,
     scoreAfter,
-    nCritAfter: calculate(run.scenario, [shock]).nCrit,
+    nCritAfter: calculate(run.scenario, [shock], ds).nCrit,
     ...(suggestion ? { suggestion } : {}),
   };
 }
