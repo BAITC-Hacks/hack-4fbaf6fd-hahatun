@@ -58,6 +58,13 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return Response.json({ error: "invalid body", issues: z.flattenError(parsed.error) }, { status: 400 });
   }
+  const { teamName } = parsed.data;
+  let dataset: Dataset | undefined;
+  if (parsed.data.dataset !== undefined) {
+    const ds = parseDataset(parsed.data.dataset);
+    if (!ds.ok) return Response.json({ error: "Датасет не прошёл проверку", issues: ds.errors }, { status: 400 });
+    dataset = ds.dataset;
+  }
   if (activeRuns >= MAX_ACTIVE_RUNS) {
     return Response.json({ error: `Сейчас идёт ${activeRuns} прогона, попробуйте через минуту` }, { status: 429 });
   }
@@ -65,13 +72,6 @@ export async function POST(request: Request) {
   const last = lastStartByIp.get(ip) ?? 0;
   if (Date.now() - last < MIN_INTERVAL_MS) {
     return Response.json({ error: "Слишком часто: подождите несколько секунд перед новым прогоном" }, { status: 429 });
-  }
-  const { teamName } = parsed.data;
-  let dataset: Dataset | undefined;
-  if (parsed.data.dataset !== undefined) {
-    const ds = parseDataset(parsed.data.dataset);
-    if (!ds.ok) return Response.json({ error: "Датасет не прошёл проверку", issues: ds.errors }, { status: 400 });
-    dataset = ds.dataset;
   }
   const scenario = parsed.data.scenario as Scenario;
   lastStartByIp.set(ip, Date.now());
