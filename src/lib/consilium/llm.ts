@@ -40,7 +40,8 @@ export class LlmUsage {
     const tokens = this.traces.reduce((s, t) => s + t.inputTokens + t.outputTokens, 0);
     const costUsd = this.traces.reduce((s, t) => s + estimateCost(t), 0);
     const durationMs = this.traces.reduce((s, t) => s + t.durationMs, 0);
-    return { calls: this.traces.length, tokens, costUsd: round4(costUsd), durationMs };
+    const failedCalls = this.traces.filter((t) => !t.ok).length;
+    return { calls: this.traces.length, tokens, costUsd: round4(costUsd), durationMs, failedCalls };
   }
 }
 

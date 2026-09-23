@@ -185,6 +185,7 @@ export interface RunUsage {
   tokens: number;
   costUsd: number;
   durationMs: number;
+  failedCalls?: number; // LLM calls that threw and were replaced by fallbacks
 }
 
 export interface Run {
