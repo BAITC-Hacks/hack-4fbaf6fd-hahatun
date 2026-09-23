@@ -1,4 +1,6 @@
+import { LLM_NOTE, llmStatus } from "@/lib/ui/llm-status";
 import type { Run } from "@/lib/types";
+import { UsagePanel } from "@/components/result/UsagePanel";
 import { ArbiterResolution } from "./ArbiterResolution";
 import { DraftHistory } from "./DraftHistory";
 import { ExpertTable } from "./ExpertTable";
@@ -6,6 +8,7 @@ import { HallSection } from "./HallSection";
 import { ReviewerBoard } from "./ReviewerBoard";
 
 export function ConsiliumHall({ run }: { run: Run }) {
+  const status = llmStatus(run);
   return (
     <section aria-labelledby="consilium-hall" className="space-y-12 pt-6">
       <header className="max-w-3xl">
@@ -16,9 +19,9 @@ export function ConsiliumHall({ run }: { run: Run }) {
           Эксперты высказываются, синтезатор пишет заключение, ревизоры проверяют его по шести условиям,
           арбитр выносит резолюцию. Все числа — из фактов движка.
         </p>
-        {!run.llmEnabled && (
+        {status !== "live" && (
           <p className="mt-4 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm">
-            Демо-режим: ключ OpenAI не задан, тексты консилиума взяты из фикстуры. Расчёты движка живые.
+            {LLM_NOTE[status]}. Расчёты движка живые.
           </p>
         )}
       </header>
@@ -33,6 +36,7 @@ export function ConsiliumHall({ run }: { run: Run }) {
       </HallSection>
       <HallSection title="Резолюция арбитра">
         <ArbiterResolution resolution={run.resolution} runId={run.id} facts={run.facts} />
+        <UsagePanel run={run} />
       </HallSection>
     </section>
   );

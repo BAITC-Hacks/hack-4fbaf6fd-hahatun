@@ -1,6 +1,7 @@
 import { MEASURE_BY_ID } from "@/lib/data/measures";
 import { BUDGET, CRITICAL_THRESHOLD, DISTRICT_LABELS, type Run } from "@/lib/types";
 import { OUTCOME_LABELS, ROLE_LABELS } from "@/lib/ui/labels";
+import { llmStatus } from "@/lib/ui/llm-status";
 
 // A15: short markdown pitch of a saved run, for the jury / a slide. Only numbers already
 // present on the Run are used — nothing here is invented or recomputed beyond arithmetic
@@ -154,7 +155,8 @@ function buildResolutionSection(run: Run): string {
 function buildMethodologySection(run: Run): string {
   const { usage } = run;
   const durationSec = fmt(usage.durationMs / 1000);
-  const fallback = run.llmEnabled ? "" : " Без LLM (фолбэк).";
+  const status = llmStatus(run);
+  const fallback = status === "live" ? "" : status === "partial" ? " Часть текстов — фолбэк: не все вызовы модели ответили." : " Без LLM (фолбэк).";
   return [
     "## Как это посчитано",
     "",

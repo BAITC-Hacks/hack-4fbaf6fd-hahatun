@@ -1,3 +1,4 @@
+import { LLM_NOTE, llmStatus } from "@/lib/ui/llm-status";
 import type { Run } from "@/lib/types";
 import { formatScore } from "@/lib/ui/format";
 import { Card } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { VerdictStats } from "@/components/result/VerdictStats";
 
 // Verdict summary: big Score with delta, a definition list of supporting facts and the outcome stamp.
 export function VerdictHeader({ run }: { run: Run }) {
+  const status = llmStatus(run);
   const { engine } = run;
   return (
     <Card className="gap-6 px-6 py-6">
@@ -26,10 +28,8 @@ export function VerdictHeader({ run }: { run: Run }) {
         <VerdictStats run={run} />
         <OutcomeStamp outcome={run.resolution.outcome} />
       </div>
-      {!run.llmEnabled && (
-        <p className="border-t border-border pt-4 text-xs text-muted-foreground">
-          Ключ OpenAI не задан: тексты консилиума взяты из заготовки
-        </p>
+      {status !== "live" && (
+        <p className="border-t border-border pt-4 text-xs text-muted-foreground">{LLM_NOTE[status]}</p>
       )}
     </Card>
   );

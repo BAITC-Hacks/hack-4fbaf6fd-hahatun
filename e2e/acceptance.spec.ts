@@ -48,6 +48,12 @@ test.describe("Аким на 5 часов — приёмка", () => {
     await expect(page.getByText("Районы до и после").first()).toBeVisible();
     for (const name of EXPERTS) await expect(page.getByText(name).first()).toBeVisible();
 
+    // round-3 UI: event card, pitch link, usage panel
+    await expect(page.getByRole("heading", { name: /Внезапное событие/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Перераспределить бюджет" })).toHaveAttribute("href", /\/play\?s=/);
+    await expect(page.getByRole("link", { name: /Скачать краткую презентацию/ })).toHaveAttribute("href", `/api/runs/${runId}/pitch`);
+    await expect(page.getByText(/длительность:/)).toBeVisible();
+
     const run = await request.get(`/api/runs/${runId}`);
     expect(run.ok()).toBeTruthy();
     const body = await run.json();
