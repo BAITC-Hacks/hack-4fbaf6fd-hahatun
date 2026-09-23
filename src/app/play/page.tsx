@@ -40,7 +40,7 @@ export default async function PlayPage({ searchParams }: PageProps<"/play">) {
     <>
       <PageHeader
         title="Кабинет решений"
-        lead="Выберите пять мер и районы для них. Score пересчитывается сразу, а консилиум откроется, когда набор пройдёт проверку."
+        lead="Выберите 5 мер в пределах 100 у.е. — Score пересчитывается сразу."
       />
       <Cabinet
         key={encodeDecisions(initial)}

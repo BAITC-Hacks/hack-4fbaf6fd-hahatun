@@ -1,4 +1,4 @@
-import type { ExpertRole, Outcome, Stage } from "@/lib/types";
+import type { ExpertRole, Indicator, Outcome, Stage } from "@/lib/types";
 import { DIRECTION_LABELS } from "@/lib/types";
 
 export const OUTCOME_LABELS: Record<Outcome, string> = {
@@ -32,4 +32,18 @@ export const STAGE_LABELS: Record<Stage, string> = {
   review: "Ревизия черновика",
   arbiter: "Резолюция арбитра",
   persist: "Сохранение прогона",
+};
+
+// Short "+N к …" phrasing for the cabinet: «+16 к школам и детсадам».
+export const EFFECT_LABELS: Record<Indicator, string> = {
+  T1: "к разгрузке дорог",
+  T2: "к общественному транспорту",
+  E1: "к озеленению",
+  E2: "к качеству воздуха",
+  S1: "к школам и детсадам",
+  S2: "к поликлиникам",
+  B1: "к безопасности улиц",
+  B2: "к безопасности на дорогах",
+  C1: "к надёжности ЖКХ",
+  C2: "к скорости обращений",
 };

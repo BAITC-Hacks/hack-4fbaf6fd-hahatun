@@ -1,43 +1,48 @@
-import { LLM_NOTE, llmStatus } from "@/lib/ui/llm-status";
 import type { Run } from "@/lib/types";
-import { UsagePanel } from "@/components/result/UsagePanel";
-import { ArbiterResolution } from "./ArbiterResolution";
+import { Disclosure } from "@/components/result/Disclosure";
 import { DraftHistory } from "./DraftHistory";
+import { ExpertLine } from "./ExpertLine";
 import { ExpertTable } from "./ExpertTable";
-import { HallSection } from "./HallSection";
+import { ResolutionBrief } from "./ResolutionBrief";
+import { ResolutionDetails } from "./ResolutionDetails";
 import { ReviewerBoard } from "./ReviewerBoard";
 
+// Short by default: decision, one line per expert, everything else behind disclosures.
+// Expert lines come before any closed disclosure in the DOM, so each name's first match is visible.
 export function ConsiliumHall({ run }: { run: Run }) {
-  const status = llmStatus(run);
+  const { resolution } = run;
+  const review = run.reviews.at(-1);
+  const hasDetails = resolution.disputes.length > 0 || resolution.mandates.length > 0 || Boolean(resolution.caveat);
   return (
-    <section aria-labelledby="consilium-hall" className="space-y-12 pt-6">
-      <header className="max-w-3xl">
-        <h2 id="consilium-hall" className="font-display text-2xl font-semibold tracking-tight">
-          Зал заседаний консилиума
-        </h2>
-        <p className="mt-2 max-w-[65ch] text-muted-foreground">
-          Эксперты высказываются, синтезатор пишет заключение, ревизоры проверяют его по шести условиям,
-          арбитр выносит резолюцию. Все числа — из фактов движка.
-        </p>
-        {status !== "live" && (
-          <p className="mt-4 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm">
-            {LLM_NOTE[status]}. Расчёты движка живые.
-          </p>
+    <section aria-labelledby="consilium" className="flex flex-col gap-8">
+      <h2 id="consilium" className="border-b border-border pb-2 font-display text-lg font-semibold">
+        Консилиум
+      </h2>
+      <ResolutionBrief resolution={resolution} />
+      <div className="flex flex-col gap-1">
+        <h3 className="font-display text-base font-semibold">Эксперты</h3>
+        <ul className="divide-y divide-border">
+          {run.opinions.map((o) => (
+            <ExpertLine key={o.role} opinion={o} />
+          ))}
+        </ul>
+      </div>
+      <div className="divide-y divide-border border-y border-border">
+        {hasDetails && (
+          <Disclosure title="Споры и поручения арбитра">
+            <ResolutionDetails resolution={resolution} facts={run.facts} />
+          </Disclosure>
         )}
-      </header>
-      <HallSection title="Стол экспертов" hint="Шесть экспертов оценивают набор по своим направлениям.">
-        <ExpertTable opinions={run.opinions} facts={run.facts} />
-      </HallSection>
-      <HallSection title="Табло ревизоров" hint="Каждый черновик проверяется по шести условиям.">
-        <ReviewerBoard reviews={run.reviews} />
-      </HallSection>
-      <HallSection title="История черновиков" hint="Абзацы, отклонённые ревизорами, отмечены красным.">
-        <DraftHistory drafts={run.drafts} reviews={run.reviews} />
-      </HallSection>
-      <HallSection title="Резолюция арбитра">
-        <ArbiterResolution resolution={run.resolution} runId={run.id} facts={run.facts} />
-        <UsagePanel run={run} />
-      </HallSection>
+        <Disclosure title="Мнения экспертов подробно">
+          <ExpertTable opinions={run.opinions} facts={run.facts} />
+        </Disclosure>
+        <Disclosure title={review ? `Ревизия: ${review.passed} из ${review.total} условий` : "Ревизия"}>
+          <ReviewerBoard reviews={run.reviews} />
+        </Disclosure>
+        <Disclosure title="Черновики заключения">
+          <DraftHistory drafts={run.drafts} reviews={run.reviews} />
+        </Disclosure>
+      </div>
     </section>
   );
 }

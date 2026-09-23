@@ -1,7 +1,6 @@
 import type { Run } from "@/lib/types";
 import { CRITICAL_THRESHOLD, HORIZON_QUARTERS } from "@/lib/types";
 import { formatScore } from "@/lib/ui/format";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { MeasureContributions } from "@/components/result/MeasureContributions";
 
@@ -19,11 +18,7 @@ const STEPS = [
 export function HowCalculated({ run }: { run: Run }) {
   const { engine } = run;
   return (
-    <Card className="gap-6 px-6 py-6">
-      <CardHeader className="px-0">
-        <CardTitle className="font-display text-lg font-semibold">Как считалось</CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-8 px-0 md:grid-cols-2">
+    <div className="grid gap-8 md:grid-cols-2">
         <section className="flex flex-col gap-4">
           <div className="font-mono text-sm tabular-nums">
             <p>Score = 0.7 × D_avg + 0.3 × min(D_d) − N_crit</p>
@@ -57,7 +52,6 @@ export function HowCalculated({ run }: { run: Run }) {
             </>
           )}
         </section>
-      </CardContent>
-    </Card>
+    </div>
   );
 }

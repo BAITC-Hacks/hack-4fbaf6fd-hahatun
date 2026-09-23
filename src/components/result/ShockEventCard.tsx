@@ -3,54 +3,54 @@ import { TriangleAlert } from "lucide-react";
 import type { Run } from "@/lib/types";
 import { DISTRICT_LABELS, INDICATOR_LABELS } from "@/lib/types";
 import { buttonVariants } from "@/components/ui/button";
+import { Disclosure } from "@/components/result/Disclosure";
 import { buildEvent } from "@/lib/engine/events";
 import { formatDelta, formatScore } from "@/lib/ui/format";
 import { encodeDecisions } from "@/lib/ui/scenario";
 
-// Sudden city event on top of the finished run (A14): what hit where, what it costs, and a way back to the cabinet.
+// Sudden city event (A14) as one compact notice row; the story and the best swap sit behind «Подробнее».
 export function ShockEventCard({ run }: { run: Run }) {
   const event = buildEvent(run);
   const { shock, suggestion } = event;
-  const lost = event.scoreAfter - event.scoreBefore;
   return (
     <section
       aria-labelledby="shock-title"
-      className="flex flex-col gap-4 rounded-xl border border-destructive/30 bg-destructive/5 px-6 py-5 md:flex-row md:items-end md:justify-between"
+      className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-2"
     >
-      <div className="space-y-2">
-        <h2 id="shock-title" className="flex items-center gap-2 font-display text-lg font-semibold text-balance">
-          <TriangleAlert className="size-5 shrink-0 text-destructive" aria-hidden />
-          Внезапное событие: {event.title}
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {DISTRICT_LABELS[shock.districtId]} · <span className="font-mono">{shock.indicator}</span>{" "}
-          {INDICATOR_LABELS[shock.indicator]} · удар{" "}
-          <span className="font-medium text-destructive tabular-nums">{formatDelta(shock.delta)}</span>
-        </p>
-        <p className="max-w-[65ch]">{event.text}</p>
-        <p className="text-sm tabular-nums">
-          Score с тем же набором: {formatScore(event.scoreBefore)} → {formatScore(event.scoreAfter)}{" "}
-          <span className="text-destructive">({formatDelta(lost)})</span>, критических значений: {event.nCritAfter}
-        </p>
-        {suggestion && (
-          <p className="text-sm text-muted-foreground">
-            Лучшая замена под событием: {suggestion.change}, Score {formatScore(suggestion.score)}
+      <TriangleAlert className="size-4 shrink-0 text-destructive" aria-hidden />
+      <h2 id="shock-title" className="font-medium">
+        Внезапное событие: {event.title}
+      </h2>
+      <p className="text-sm text-muted-foreground tabular-nums">
+        {DISTRICT_LABELS[shock.districtId]}, {INDICATOR_LABELS[shock.indicator].toLowerCase()}{" "}
+        <span className="text-destructive">{formatDelta(shock.delta)}</span> · Score {formatScore(event.scoreBefore)} →{" "}
+        {formatScore(event.scoreAfter)}
+      </p>
+      <Link
+        href={`/play?s=${encodeDecisions(run.scenario.decisions)}`}
+        className={buttonVariants({ variant: "outline", size: "sm", className: "ml-auto" })}
+      >
+        Перераспределить бюджет
+      </Link>
+      <Disclosure title="Подробнее" className="basis-full">
+        <div className="flex max-w-[65ch] flex-col gap-2 text-sm">
+          <p>{event.text}</p>
+          <p className="text-muted-foreground tabular-nums">
+            Критических значений после события: {event.nCritAfter}.
           </p>
-        )}
-      </div>
-      <div className="flex shrink-0 flex-col gap-2 md:items-end">
-        <Link href={`/play?s=${encodeDecisions(run.scenario.decisions)}`} className={buttonVariants()}>
-          Перераспределить бюджет
-        </Link>
-        {suggestion && (
-          <Link
-            href={`/play?s=${encodeDecisions(suggestion.scenario.decisions)}`}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            Открыть с заменой
-          </Link>
-        )}
-      </div>
+          {suggestion && (
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-2 tabular-nums">
+              Лучшая замена под событием: {suggestion.change}, Score {formatScore(suggestion.score)}
+              <Link
+                href={`/play?s=${encodeDecisions(suggestion.scenario.decisions)}`}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                Открыть с заменой
+              </Link>
+            </p>
+          )}
+        </div>
+      </Disclosure>
     </section>
   );
 }
