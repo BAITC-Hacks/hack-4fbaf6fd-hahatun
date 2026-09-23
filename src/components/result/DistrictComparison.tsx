@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { DistrictId, DistrictResult } from "@/lib/types";
 import { DISTRICT_LABELS } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DistrictHeatMap } from "@/components/map/DistrictHeatMap";
 import { DistrictSwitcher } from "@/components/result/DistrictSwitcher";
 import { IndicatorTable } from "@/components/result/IndicatorTable";
 import { ScoreRadar } from "@/components/result/ScoreRadar";
@@ -14,7 +15,11 @@ function mostChanged(districts: DistrictResult[]): DistrictId {
   return districts.reduce((best, d) => (change(d) > change(best) ? d : best)).id;
 }
 
-// District switcher with radar and indicator table for the selected district.
+function dOf(districts: DistrictResult[], key: "dBefore" | "dAfter") {
+  return Object.fromEntries(districts.map((d) => [d.id, d[key]])) as Record<DistrictId, number>;
+}
+
+// District map and switcher with radar and indicator table for the selected district.
 export function DistrictComparison({ districts }: { districts: DistrictResult[] }) {
   const [selected, setSelected] = useState<DistrictId>(() => mostChanged(districts));
   const district = districts.find((d) => d.id === selected) ?? districts[0];
@@ -26,8 +31,15 @@ export function DistrictComparison({ districts }: { districts: DistrictResult[] 
           Выбран район {DISTRICT_LABELS[district.id]}. По умолчанию открыт район с наибольшим изменением D.
         </CardDescription>
       </CardHeader>
+      <DistrictHeatMap
+        values={dOf(districts, "dAfter")}
+        previous={dOf(districts, "dBefore")}
+        selected={district.id}
+        onSelect={setSelected}
+        caption="D районов после решений, под значением — изменение"
+      />
       <DistrictSwitcher districts={districts} selected={district.id} onSelect={setSelected} />
-      <CardContent className="grid grid-cols-[minmax(0,5fr)_minmax(0,6fr)] items-start gap-6 px-0">
+      <CardContent className="grid items-start gap-6 px-0 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
         <ScoreRadar district={district} />
         <IndicatorTable district={district} />
       </CardContent>

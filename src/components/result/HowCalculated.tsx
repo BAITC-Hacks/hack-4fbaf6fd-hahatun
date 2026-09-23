@@ -23,11 +23,11 @@ export function HowCalculated({ run }: { run: Run }) {
       <CardHeader className="px-0">
         <CardTitle className="font-display text-lg font-semibold">Как считалось</CardTitle>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-8 px-0">
+      <CardContent className="grid gap-8 px-0 md:grid-cols-2">
         <section className="flex flex-col gap-4">
-          <div className="rounded-lg border border-border bg-background px-4 py-3 font-mono text-sm">
+          <div className="font-mono text-sm tabular-nums">
             <p>Score = 0.7 × D_avg + 0.3 × min(D_d) − N_crit</p>
-            <p className="mt-1 text-muted-foreground tabular-nums">
+            <p className="mt-1 text-muted-foreground">
               = 0.7 × {formatScore(engine.dAvg)} + 0.3 × {formatScore(engine.minDistrict.value)} − {engine.nCrit}{" "}
               = <span className="font-semibold text-foreground">{formatScore(engine.score)}</span>
             </p>
@@ -35,7 +35,7 @@ export function HowCalculated({ run }: { run: Run }) {
           <p className="text-xs text-muted-foreground">
             Числа округлены для показа, движок считает без округления.
           </p>
-          <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm">
+          <ul className="flex max-w-[65ch] list-disc flex-col gap-1.5 pl-5 text-sm marker:text-muted-foreground">
             {STEPS.map((step) => (
               <li key={step}>{step}</li>
             ))}

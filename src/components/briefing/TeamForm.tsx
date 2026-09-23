@@ -31,7 +31,7 @@ export function TeamForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-2 rounded-lg border border-border bg-card p-5">
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-2">
       <label htmlFor="team-name" className="text-sm font-medium">
         Название команды
       </label>

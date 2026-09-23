@@ -127,7 +127,7 @@ export function MeasureCard(props: MeasureCardProps) {
   return (
     <article
       className={cn(
-        "flex flex-col overflow-hidden rounded-lg border border-border bg-card transition-shadow",
+        "flex flex-col overflow-hidden rounded-lg border border-border bg-card",
         "has-[>button:focus-visible]:ring-3 has-[>button:focus-visible]:ring-ring/50",
         selected && "border-primary ring-1 ring-primary",
         blocked && "opacity-60",

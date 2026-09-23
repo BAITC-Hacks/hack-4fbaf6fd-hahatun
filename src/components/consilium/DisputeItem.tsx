@@ -9,8 +9,11 @@ interface DisputeItemProps {
 
 export function DisputeItem({ dispute, facts }: DisputeItemProps) {
   return (
-    <li className="space-y-1.5 border-l-2 border-gold/60 pl-4">
-      <p className="font-medium">{dispute.topic}</p>
+    <li className="max-w-[72ch] space-y-1.5 pl-4">
+      <p className="relative font-medium">
+        <span aria-hidden className="absolute top-[0.55em] -left-4 size-2 rounded-[2px] bg-gold" />
+        {dispute.topic}
+      </p>
       <p className="text-sm">
         Арбитр принял сторону: <span className="font-medium">{ROLE_LABELS[dispute.sideTaken]}</span>
       </p>

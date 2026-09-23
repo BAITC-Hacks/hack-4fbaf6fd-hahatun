@@ -6,7 +6,7 @@ interface DraftListProps {
 export function DraftList({ title, items }: DraftListProps) {
   return (
     <div>
-      <h5 className="mb-1.5 text-xs font-medium tracking-[0.08em] text-muted-foreground uppercase">{title}</h5>
+      <h5 className="mb-1.5 text-sm font-medium">{title}</h5>
       <ul className="list-disc space-y-1 pl-4 text-sm marker:text-muted-foreground">
         {items.map((item, i) => (
           <li key={i}>{item}</li>

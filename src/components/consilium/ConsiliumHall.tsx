@@ -7,18 +7,17 @@ import { ReviewerBoard } from "./ReviewerBoard";
 
 export function ConsiliumHall({ run }: { run: Run }) {
   return (
-    <section aria-labelledby="consilium-hall" className="space-y-12">
+    <section aria-labelledby="consilium-hall" className="space-y-12 pt-6">
       <header className="max-w-3xl">
-        <p className="font-mono text-xs tracking-[0.12em] text-muted-foreground uppercase">Консилиум</p>
-        <h2 id="consilium-hall" className="mt-2 font-display text-2xl font-semibold tracking-tight">
-          Зал заседаний
+        <h2 id="consilium-hall" className="font-display text-2xl font-semibold tracking-tight">
+          Зал заседаний консилиума
         </h2>
-        <p className="mt-2 text-muted-foreground">
+        <p className="mt-2 max-w-[65ch] text-muted-foreground">
           Эксперты высказываются, синтезатор пишет заключение, ревизоры проверяют его по шести условиям,
           арбитр выносит резолюцию. Все числа — из фактов движка.
         </p>
         {!run.llmEnabled && (
-          <p className="mt-3 border-l-2 border-gold pl-3 text-sm text-muted-foreground">
+          <p className="mt-4 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm">
             Демо-режим: ключ OpenAI не задан, тексты консилиума взяты из фикстуры. Расчёты движка живые.
           </p>
         )}

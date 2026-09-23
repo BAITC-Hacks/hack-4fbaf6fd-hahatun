@@ -30,13 +30,11 @@ export function DraftView({ draft, review }: DraftViewProps) {
         <DraftList title="Последствия" items={draft.consequences} />
       </div>
       <div className="border-t border-border pt-5">
-        <h5 className="mb-1.5 text-xs font-medium tracking-[0.08em] text-muted-foreground uppercase">
-          Рекомендация
-        </h5>
-        <p className="text-sm">{text}</p>
+        <h5 className="mb-1.5 text-sm font-medium">Рекомендация</h5>
+        <p className="max-w-[70ch] text-sm">{text}</p>
         {improvement && (
           <p className="mt-1.5 text-xs text-muted-foreground tabular-nums">
-            <span className="font-mono">{improvement.change}</span> · Score {formatScore(improvement.score)}{" "}
+            {improvement.change} · Score {formatScore(improvement.score)}{" "}
             <span className="text-outcome-approve">{formatDelta(improvement.delta)}</span>
           </p>
         )}

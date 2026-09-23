@@ -16,8 +16,8 @@ export function DraftText({ text, failed }: DraftTextProps) {
         <div key={i} className="grid gap-x-4 gap-y-1 md:grid-cols-[minmax(0,1fr)_14rem]">
           <p
             className={cn(
-              "leading-relaxed",
-              seg.failures.length > 0 && "rounded-r-sm border-l-2 border-destructive bg-destructive/10 py-1 pr-2 pl-3",
+              "max-w-[72ch] leading-relaxed",
+              seg.failures.length > 0 && "rounded-md border border-destructive/30 bg-destructive/8 px-3 py-1.5",
             )}
           >
             {seg.text}
