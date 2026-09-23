@@ -45,7 +45,7 @@ export async function synthesize(
       {
         role: "synthesizer",
         tier: "judge",
-        reasoning: "minimal",
+        reasoning: "none",
         system: SYNTH_SYSTEM_PROMPT_V1,
         prompt: synthUserPrompt(input),
         schema: synthAnswerSchema,

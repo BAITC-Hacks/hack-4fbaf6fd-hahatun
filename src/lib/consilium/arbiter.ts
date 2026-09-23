@@ -1,4 +1,5 @@
 import "server-only";
+import { allowedNumbers, foreignNumbers } from "./numbers";
 import { z } from "zod";
 import { DIRECTION_LABELS, type Draft, type EngineResult, type ExpertOpinion, type ExpertRole, type Fact, type Improvement, type Outcome, type Resolution, type Review } from "@/lib/types";
 import { callStructured, isLlmEnabled, type LlmUsage } from "./llm";
@@ -29,7 +30,7 @@ const arbiterSchema = z.object({
   disputes: z.array(z.object({ topic: z.string(), factRefs: z.array(z.string()), reason: z.string(), sideTaken: z.enum(ROLES) })),
   justification: z.string(),
   mandates: z.array(z.object({ improvementIndex: z.number().int(), text: z.string() })),
-  caveat: z.string().optional(),
+  caveat: z.string().nullable(),
 });
 type ArbiterOutput = z.infer<typeof arbiterSchema>;
 
@@ -43,7 +44,17 @@ export function decideOutcome(engine: EngineResult, review: Review): Outcome {
 
 export async function arbitrate(input: ArbiterInput, usage: LlmUsage): Promise<Resolution> {
   const outcome = decideOutcome(input.engine, input.review);
-  const draft = isLlmEnabled() ? await callArbiter(input, outcome, usage) : deterministicResolution(input, outcome);
+  let draft: ArbiterOutput;
+  if (isLlmEnabled()) {
+    try {
+      draft = await callArbiter(input, outcome, usage);
+    } catch {
+      // LLM failure is recorded in usage.traces; fall back to the deterministic resolution.
+      draft = deterministicResolution(input, outcome);
+    }
+  } else {
+    draft = deterministicResolution(input, outcome);
+  }
   return finalize(input, outcome, draft);
 }
 
@@ -62,10 +73,18 @@ function defaultCaveat(review: Review): string {
 // Code gate over the arbiter's output: unknown facts, roles and improvements are dropped.
 function finalize(input: ArbiterInput, outcome: Outcome, out: ArbiterOutput): Resolution {
   const factIds = new Set(input.facts.map((f) => f.id));
+  const allowed = allowedNumbers(input.facts);
+  const clean = (text: string, fallback: string) => (foreignNumbers(text, allowed).length === 0 ? text : fallback);
+  const safe = deterministicResolution(input, outcome);
   const roles = new Set(input.opinions.map((o) => o.role));
   const disputes = out.disputes
     .filter((d) => roles.has(d.sideTaken))
-    .map((d) => ({ topic: d.topic, sideTaken: d.sideTaken, reason: d.reason, factRefs: d.factRefs.filter((id) => factIds.has(id)) }));
+    .map((d) => ({
+      topic: d.topic,
+      sideTaken: d.sideTaken,
+      reason: clean(d.reason, `Позиция «${ROLE_LABELS[d.sideTaken]}» принята по фактам ${d.factRefs.filter((id) => factIds.has(id)).join(", ") || "движка"}.`),
+      factRefs: d.factRefs.filter((id) => factIds.has(id)),
+    }));
 
   const seen = new Set<number>();
   const mandates: Resolution["mandates"] = [];
@@ -73,13 +92,13 @@ function finalize(input: ArbiterInput, outcome: Outcome, out: ArbiterOutput): Re
     const imp = input.improvements[m.improvementIndex];
     if (!imp || seen.has(m.improvementIndex)) continue;
     seen.add(m.improvementIndex);
-    mandates.push({ improvement: imp, text: m.text });
+    mandates.push({ improvement: imp, text: clean(m.text, defaultMandateText(imp, outcome)) });
   }
   if (outcome === "approve_with_conditions" && mandates.length === 0 && input.improvements[0]) {
     mandates.push({ improvement: input.improvements[0], text: defaultMandateText(input.improvements[0], outcome) });
   }
 
-  const resolution: Resolution = { outcome, disputes, justification: out.justification, mandates };
+  const resolution: Resolution = { outcome, disputes, justification: clean(out.justification, safe.justification), mandates };
   if (input.review.passed < input.review.total) resolution.caveat = out.caveat?.trim() || defaultCaveat(input.review);
   return resolution;
 }
@@ -143,5 +162,5 @@ export function deterministicResolution(input: ArbiterInput, outcome: Outcome): 
   });
   const first = input.improvements[0];
   const mandates = first ? [{ improvementIndex: 0, text: defaultMandateText(first, outcome) }] : [];
-  return { disputes, justification, mandates };
+  return { disputes, justification, mandates, caveat: null };
 }

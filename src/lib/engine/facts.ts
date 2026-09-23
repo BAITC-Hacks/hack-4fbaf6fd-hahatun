@@ -74,7 +74,7 @@ export function buildFacts(scenario: Scenario, engine: EngineResult, optimizer?:
 
   if (optimizer) {
     add(`Перцентиль набора среди соседних наборов (одна замена): ${r2(optimizer.percentile * 100)}%`, "general", r2(optimizer.percentile * 100));
-    add(`Лучший возможный Score при этих правилах: ${r2(optimizer.bestScore)}`, "general", optimizer.bestScore);
+    add(`Лучший Score среди соседних наборов (одна замена): ${r2(optimizer.bestScore)}`, "general", optimizer.bestScore);
     optimizer.improvements.forEach((imp, i) => {
       add(`Улучшение №${i + 1}: ${imp.change}, Score ${r2(imp.score)} (${sign(imp.delta)})`, "general", imp.score);
     });

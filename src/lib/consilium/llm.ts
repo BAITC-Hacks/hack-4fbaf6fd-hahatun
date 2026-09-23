@@ -17,7 +17,7 @@ export interface LlmCall<T> {
   prompt: string;
   schema: z.ZodType<T>;
   promptVersion: string; // e.g. "expert-v1"
-  reasoning?: "minimal" | "low" | "medium";
+  reasoning?: "none" | "low" | "medium";
 }
 
 export interface LlmTrace {
@@ -94,7 +94,7 @@ export async function callStructured<T>(call: LlmCall<T>, usage: LlmUsage): Prom
       system,
       prompt: call.prompt,
       maxRetries: 3,
-      providerOptions: { openai: { reasoningEffort: call.reasoning ?? (call.tier === "expert" ? "minimal" : "low") } },
+      providerOptions: { openai: { reasoningEffort: call.reasoning ?? (call.tier === "expert" ? "none" : "low") } },
     });
     usage.add({
       role: call.role,

@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       try {
         await runConsilium({ teamName, scenario }, emit);
       } finally {
-        if (open) controller.close();
+        if (open) { try { controller.close(); } catch { /* stream already cancelled */ } }
       }
     },
   });

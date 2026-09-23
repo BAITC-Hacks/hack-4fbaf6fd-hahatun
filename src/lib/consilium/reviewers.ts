@@ -24,7 +24,7 @@ const llmReviewSchema = z.object({
   conditions: z.array(
     z.object({
       id: z.enum(LLM_IDS),
-      quote: z.string().optional(),
+      quote: z.string().nullable(),
       reason: z.string(),
       passed: z.boolean(),
     }),
@@ -32,7 +32,17 @@ const llmReviewSchema = z.object({
 });
 
 export async function review(input: ReviewInput, usage: LlmUsage): Promise<Review> {
-  const llmConditions = isLlmEnabled() ? await checkWithLlm(input, usage) : checkWithHeuristics(input);
+  let llmConditions: ReviewCondition[];
+  if (isLlmEnabled()) {
+    try {
+      llmConditions = await checkWithLlm(input, usage);
+    } catch {
+      // LLM failure is recorded in usage.traces; the run must not die here (plan.md §2 p.5).
+      llmConditions = checkWithHeuristics(input).map((c) => ({ ...c, reason: `${c.reason} (LLM недоступен, эвристика)` }));
+    }
+  } else {
+    llmConditions = checkWithHeuristics(input);
+  }
   const conditions = [checkNumbers(input), checkRecommendation(input), ...llmConditions];
   const passed = conditions.filter((c) => c.passed).length;
   return { round: input.round, conditions, passed, total: 6, ok: passed >= REVIEW_PASS_THRESHOLD };
