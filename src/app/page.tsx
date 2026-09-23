@@ -1,6 +1,7 @@
 import { BriefingSummary } from "@/components/briefing/BriefingSummary";
 import { DistrictGrid } from "@/components/briefing/DistrictGrid";
 import { TeamForm } from "@/components/briefing/TeamForm";
+import { DistrictHeatMap } from "@/components/map/DistrictHeatMap";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { DISTRICTS } from "@/lib/data";
 import { calculate } from "@/lib/engine";
@@ -20,6 +21,9 @@ export default function BriefingPage() {
       />
       <div className="flex flex-col gap-8">
         <BriefingSummary baseScore={base.baseScore} nCrit={base.nCrit} />
+        <section aria-label="Схема районов" className="rounded-lg border border-border bg-card p-5">
+          <DistrictHeatMap values={scores} caption="Качество жизни по районам до решений" />
+        </section>
         <DistrictGrid districts={DISTRICTS} scores={scores} />
         <TeamForm />
       </div>
