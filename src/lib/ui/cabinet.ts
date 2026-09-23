@@ -10,7 +10,7 @@ import {
   type ValidationError,
   type ValidationResult,
 } from "@/lib/types";
-import { humanizeText } from "./humanize";
+import { humanizeText, namesOf } from "./humanize";
 import { EFFECT_LABELS } from "./labels";
 import { directionCounts } from "./scenario";
 
@@ -27,7 +27,7 @@ export function summarizeSet(decisions: Decision[], ds: Dataset = DEFAULT_DATASE
   // An unfinished set is normal while picking; COUNT is shown only when the player goes over the limit.
   const errors = validation.errors
     .filter((e) => e.code !== "COUNT" || decisions.length > DECISIONS_COUNT)
-    .map((e) => ({ ...e, message: humanizeText(e.message) }));
+    .map((e) => ({ ...e, message: humanizeText(e.message, namesOf(ds)) }));
   return {
     validation,
     score: validation.ok ? scoreOf(decisions, [], ds) : null,

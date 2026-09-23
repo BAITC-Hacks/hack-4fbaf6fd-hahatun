@@ -4,18 +4,18 @@ import path from "node:path";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateSpeech } from "ai";
 import { isLlmEnabled } from "@/lib/consilium/llm";
-import { humanizeText } from "@/lib/ui/humanize";
+import { humanizeText, namesOf } from "@/lib/ui/humanize";
 import { OUTCOME_LABELS } from "@/lib/ui/labels";
 import type { Run } from "@/lib/types";
 
 // The arbiter's resolution read aloud. Text is built by code from the saved run; audio is cached per run id.
 const MAX_CHARS = 1500;
 
-export function voiceText(run: Pick<Run, "resolution">): string {
+export function voiceText(run: Pick<Run, "resolution" | "sandbox">): string {
   const { outcome, justification, mandates } = run.resolution;
   const parts = [`Постановляю: ${OUTCOME_LABELS[outcome].toLowerCase()}.`, justification.trim()];
   if (mandates.length > 0) parts.push(`Поручения: ${mandates.map((m) => m.text.trim().replace(/\.$/, "")).join("; ")}.`);
-  const text = humanizeText(parts.join(" ")).replace(/\s+/g, " ");
+  const text = humanizeText(parts.join(" "), namesOf(run.sandbox?.dataset)).replace(/\s+/g, " ");
   if (text.length <= MAX_CHARS) return text;
   const cut = text.slice(0, MAX_CHARS).replace(/[^.!?]*$/, "").trim();
   return cut || text.slice(0, MAX_CHARS); // no sentence end in range: hard cut rather than an empty request

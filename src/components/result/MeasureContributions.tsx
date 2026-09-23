@@ -1,16 +1,18 @@
 import type { Decision, EngineResult, MeasureId } from "@/lib/types";
 import { DISTRICT_LABELS } from "@/lib/types";
 import { formatDelta } from "@/lib/ui/format";
+import type { MeasureNames } from "@/lib/ui/humanize";
 import { MEASURE_SHORT } from "@/lib/ui/labels";
 import { cn } from "@/lib/utils";
 
 interface MeasureContributionsProps {
   contributions: EngineResult["contributions"];
   decisions: Decision[];
+  names?: MeasureNames; // sandbox runs pass their own dataset titles
 }
 
 // How much Score each measure adds: score(all) − score(all without the measure), sorted desc.
-export function MeasureContributions({ contributions, decisions }: MeasureContributionsProps) {
+export function MeasureContributions({ contributions, decisions, names = MEASURE_SHORT }: MeasureContributionsProps) {
   const rows = [...contributions].sort((a, b) => b.delta - a.delta);
   const maxAbs = Math.max(...rows.map((r) => Math.abs(r.delta)), 0.01);
   const placeOf = (measureId: string) => {
@@ -22,7 +24,7 @@ export function MeasureContributions({ contributions, decisions }: MeasureContri
       {rows.map((r) => (
         <li key={r.measureId} className="grid grid-cols-[14rem_7rem_1fr_4rem] items-center gap-3 text-sm">
           <span>
-            <span className="first-letter:uppercase">{MEASURE_SHORT[r.measureId as MeasureId]}</span>{" "}
+            <span className="first-letter:uppercase">{names[r.measureId as MeasureId]}</span>{" "}
             <span className="font-mono text-xs text-muted-foreground" title="Код меры в датасете">
               {r.measureId}
             </span>
