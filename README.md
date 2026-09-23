@@ -127,7 +127,7 @@ cp .env.example .env
 docker compose up --build   # http://localhost:3000, прогоны в volume runs
 ```
 
-Проверки: `yarn test` (движок, валидатор, ревизоры, пайплайн), `yarn typecheck`, `yarn lint`.
+Проверки: `yarn test` (движок, валидатор, ревизоры, пайплайн), `yarn typecheck`, `yarn lint`. Приёмка в браузере: `npx playwright install chromium` один раз, затем `yarn test:e2e` при запущенном `yarn dev` (брифинг → кабинет → консилиум → вердикт → лидерборд → презентация → событие, 4 теста, около минуты с ключом).
 
 ## 7. Как проверить решение
 
