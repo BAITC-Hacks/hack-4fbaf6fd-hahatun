@@ -1,0 +1,24 @@
+# deps / build
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# env & secrets — никогда в git (правила хакатона)
+.env
+.env.local
+.env.*.local
+
+# runtime data
+data/
+tmp/
+
+# os / editor
+.DS_Store
+
+# claude code — личное, не командное
+.claude/settings.local.json
+.claude/memory/

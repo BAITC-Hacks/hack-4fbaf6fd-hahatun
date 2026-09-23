@@ -1,0 +1,30 @@
+{
+  "model": "claude-opus-5-5",
+  "permissions": {
+    "allow": [
+      "Bash(yarn dev)",
+      "Bash(yarn build)",
+      "Bash(yarn lint)",
+      "Bash(yarn test:*)",
+      "Bash(yarn tsc:*)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx vitest:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-console-log.py\""
+          }
+        ]
+      }
+    ]
+  }
+}
