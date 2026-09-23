@@ -43,7 +43,7 @@ Must-have из брифа закрыты все: единый бюджет, 5 н
 - Next.js 16 App Router (фактическая версия после скаффолда 16.3), TypeScript, yarn.
 - Tailwind + shadcn/ui, Recharts (radar, bar), lucide-react.
 - Vercel AI SDK (`ai`, `@ai-sdk/openai`), `generateObject` + zod. Модели через env: `OPENAI_EXPERT_MODEL` (дешёвая), `OPENAI_JUDGE_MODEL` (средняя). ID моделей сверить на platform.openai.com/docs/pricing при старте.
-- SQLite через Drizzle (`better-sqlite3`), файл `data/app.db`. Хранит прогоны для реплея и лидерборда.
+- Прогоны в JSON-файлах `data/runs/<id>.json` (SQLite вырезан 14:25 ради времени).
 - Vitest для движка. Один Dockerfile, `docker-compose.yml` с одним сервисом и volume под `data/`.
 - Без авторизации. Команда вводит имя при запуске прогона.
 
