@@ -20,11 +20,11 @@ export default function BriefingPage() {
 
   return (
     <div className="flex flex-col gap-20">
-      <section aria-labelledby="hero-title" className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-12">
+      <section aria-labelledby="hero-title" className="grid items-center gap-6 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1fr)] lg:gap-10">
         <div className="flex max-w-xl flex-col gap-7">
           <h1
             id="hero-title"
-            className="font-display text-[2.1rem] leading-[1.12] font-semibold tracking-[-0.02em] text-balance lg:text-[2.6rem]"
+            className="font-display text-[2.1rem] leading-[1.08] font-semibold tracking-[-0.025em] text-balance lg:text-[3.1rem]"
           >
             Станьте акимом Астаны на&nbsp;пять часов
           </h1>

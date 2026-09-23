@@ -78,6 +78,8 @@ keep ≥ 4.5:1 (`src/components/map/heat.ts`).
 
 Flat paper. Elevation is declared once per element: a 1px border **or** a 1px ring, never
 with a shadow. No glows, no blur, no glass. The only "depth" is `bg-card` over `bg-background`.
+One exception: the 3D Baiterek on `/` (three.js) lets its golden sphere bloom, because the light belongs to
+the monument itself; the canvas renders on the exact `--background` paper so there is no box. Nowhere else.
 
 ## 7. Do's and don'ts
 

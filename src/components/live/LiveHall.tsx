@@ -6,12 +6,14 @@ import { HallSection } from "@/components/consilium/HallSection";
 import { ReviewerBoard } from "@/components/consilium/ReviewerBoard";
 import { DeltaValue } from "@/components/result/DeltaValue";
 import { formatScore } from "@/lib/ui/format";
+import { humanizeParts } from "@/lib/ui/humanize";
 import type { LiveRun } from "@/lib/ui/run-stream";
 
 const ROLES: ExpertRole[] = ["transport", "ecology", "social", "safety", "service", "finance"];
 
 // The council hall filled in as events arrive; each block appears once its data exists.
-export function LiveHall({ run }: { run: LiveRun }) {
+export function LiveHall({ run: raw }: { run: LiveRun }) {
+  const run = humanizeParts(raw);
   const expertsRunning = run.stages.experts === "start";
   const pending = expertsRunning ? ROLES.filter((r) => !run.opinions.some((o) => o.role === r)) : [];
   return (
