@@ -143,6 +143,10 @@
   body {
     @apply bg-background text-foreground;
   }
+  html,
+  body {
+    overflow-x: clip; /* no sideways page scroll at any width */
+  }
   html {
     @apply font-sans;
     accent-color: var(--primary);

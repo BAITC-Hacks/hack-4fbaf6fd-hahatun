@@ -14,7 +14,7 @@ export function BudgetBar({ cost }: BudgetBarProps) {
         <span>
           {cost} из {BUDGET} у.е.
         </span>
-        {over && <span>перерасход на {cost - BUDGET}</span>}
+        {over && <span>перерасход на {cost - BUDGET} у.е.</span>}
       </p>
       <div
         role="meter"
