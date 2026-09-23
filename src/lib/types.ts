@@ -170,7 +170,7 @@ export type Stage =
   | "persist";
 
 export type ConsiliumEvent =
-  | { type: "stage"; stage: Stage; status: "start" | "done" | "error"; message?: string }
+  | { type: "stage"; stage: Stage; status: "start" | "done" | "error"; message?: string; runId?: string }
   | { type: "engine"; result: EngineResult; facts: Fact[] }
   | { type: "optimizer"; result: OptimizerResult }
   | { type: "expert"; opinion: ExpertOpinion }

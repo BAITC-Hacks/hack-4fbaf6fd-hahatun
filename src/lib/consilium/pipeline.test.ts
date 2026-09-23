@@ -116,7 +116,7 @@ describe("runConsilium", () => {
     vi.mocked(review).mockResolvedValue(okReview);
     const { events, emit } = collect();
     const run = await runConsilium({ teamName: "T", scenario }, emit);
-    expect(events).toContainEqual({ type: "stage", stage: "optimize", status: "error", message: "boom" });
+    expect(events).toContainEqual({ type: "stage", stage: "optimize", status: "error", message: "boom", runId: expect.any(String) });
     expect(run!.optimizer.improvements).toEqual([]);
     expect(run!.optimizer.bestScenario).toBe(scenario);
     expect(run!.optimizer.bestScore).toBe(run!.engine.score);
@@ -129,7 +129,7 @@ describe("runConsilium", () => {
     expect(run).toBeNull();
     expect(events.slice(-2)).toEqual([
       { type: "error", message: "llm down" },
-      { type: "stage", stage: "draft", status: "error", message: "llm down" },
+      { type: "stage", stage: "draft", status: "error", message: "llm down", runId: expect.any(String) },
     ]);
     expect(saveRun).not.toHaveBeenCalled();
     expect(events.some((e) => e.type === "done")).toBe(false);
