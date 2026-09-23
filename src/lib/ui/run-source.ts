@@ -1,14 +1,14 @@
-import { readdir, readFile } from "node:fs/promises";
-import path from "node:path";
+import { notFound } from "next/navigation";
 import type { DistrictId, Outcome, Run } from "@/lib/types";
+import { listRuns as listStoredRuns, loadRun } from "@/lib/store/runs";
 import sample from "../../../fixtures/sample-run.json";
 
-// Storage format follows task A11: one JSON file per Run in data/runs/.
-const RUNS_DIR = path.join(process.cwd(), "data", "runs");
-
-// Temporary: serves the fixture for any runId; switches to the run store when the API (task A11) lands.
+// Server-only: pages read saved runs from the store; the fixture id keeps the ?replay=1 demo working.
 export async function getRun(runId: string): Promise<Run> {
-  return { ...(sample as Run), id: runId };
+  if (runId === sample.id) return sample as Run;
+  const run = await loadRun(runId);
+  if (!run) notFound();
+  return run;
 }
 
 export interface RunSummary {
@@ -42,24 +42,18 @@ export function toSummary(run: Run, isSample = false): RunSummary {
 }
 
 async function readStoredSummaries(): Promise<RunSummary[]> {
-  let files: string[];
-  try {
-    files = await readdir(RUNS_DIR);
-  } catch {
-    return [];
-  }
+  const stored = await listStoredRuns();
   const summaries = await Promise.all(
-    files
-      .filter((f) => f.endsWith(".json"))
-      .map(async (f) => {
-        try {
-          return toSummary(JSON.parse(await readFile(path.join(RUNS_DIR, f), "utf8")) as Run);
-        } catch {
-          return null; // unreadable or not a Run: skip
-        }
-      }),
+    stored.map(async ({ id }) => {
+      try {
+        const run = await loadRun(id);
+        return run ? toSummary(run) : null;
+      } catch {
+        return null; // unreadable or not a full Run: skip
+      }
+    }),
   );
-  return summaries.filter((s) => s !== null);
+  return summaries.filter((s): s is RunSummary => s !== null);
 }
 
 /** All stored runs, best Score first. Falls back to the fixture so the page is never blank in dev. */
