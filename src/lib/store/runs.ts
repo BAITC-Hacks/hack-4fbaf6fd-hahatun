@@ -7,8 +7,9 @@ export type RunSummary = Pick<Run, "id" | "teamName" | "createdAt">;
 
 const ID_RE = /^[A-Za-z0-9_-]+$/;
 
-function runsDir(): string {
-  return process.env.DATA_DIR ?? path.join(/* turbopackIgnore: true */ process.cwd(), "data", "runs");
+export function runsDir(): string {
+  // `||`, not `??`: an empty DATA_DIR= line (as in a copied .env.example) must fall back to the default.
+  return process.env.DATA_DIR?.trim() || path.join(/* turbopackIgnore: true */ process.cwd(), "data", "runs");
 }
 
 function fileFor(id: string): string {
