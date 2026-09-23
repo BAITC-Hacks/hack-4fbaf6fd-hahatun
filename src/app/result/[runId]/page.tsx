@@ -7,6 +7,7 @@ import { NextSteps } from "@/components/result/NextSteps";
 import { ShockEventCard } from "@/components/result/ShockEventCard";
 import { UsagePanel } from "@/components/result/UsagePanel";
 import { VerdictSummary } from "@/components/result/VerdictSummary";
+import { humanizeRun } from "@/lib/ui/humanize";
 import { getRun, SAMPLE_RUN_ID } from "@/lib/ui/run-source";
 
 export const metadata: Metadata = { title: "Вердикт" };
@@ -16,7 +17,7 @@ const DATE_FORMAT = new Intl.DateTimeFormat("ru-RU", { dateStyle: "long", timeSt
 // Answer first (summary), one next step (mandates), details on demand (disclosures).
 export default async function ResultPage({ params }: PageProps<"/result/[runId]">) {
   const { runId } = await params;
-  const run = await getRun(runId);
+  const run = humanizeRun(await getRun(runId));
 
   return (
     <>

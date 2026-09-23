@@ -6,7 +6,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { Disclosure } from "@/components/result/Disclosure";
 import { buildEvent } from "@/lib/engine/events";
 import { formatDelta, formatScore } from "@/lib/ui/format";
+import { humanizeChange } from "@/lib/ui/humanize";
 import { encodeDecisions } from "@/lib/ui/scenario";
+
+// «Надёжность ЖКХ» → «надёжность ЖКХ»: only the first letter, acronyms stay intact.
+const lowerFirst = (s: string) => s.charAt(0).toLocaleLowerCase("ru") + s.slice(1);
 
 // Sudden city event (A14) as one compact notice row; the story and the best swap sit behind «Подробнее».
 export function ShockEventCard({ run }: { run: Run }) {
@@ -22,7 +26,7 @@ export function ShockEventCard({ run }: { run: Run }) {
         Внезапное событие: {event.title}
       </h2>
       <p className="text-sm text-muted-foreground tabular-nums">
-        {DISTRICT_LABELS[shock.districtId]}, {INDICATOR_LABELS[shock.indicator].toLowerCase()}{" "}
+        {DISTRICT_LABELS[shock.districtId]}, {lowerFirst(INDICATOR_LABELS[shock.indicator])}{" "}
         <span className="text-destructive">{formatDelta(shock.delta)}</span> · Score {formatScore(event.scoreBefore)} →{" "}
         {formatScore(event.scoreAfter)}
       </p>
@@ -40,7 +44,7 @@ export function ShockEventCard({ run }: { run: Run }) {
           </p>
           {suggestion && (
             <p className="flex flex-wrap items-center gap-x-3 gap-y-2 tabular-nums">
-              Лучшая замена под событием: {suggestion.change}, Score {formatScore(suggestion.score)}
+              Лучшая замена под событием: {humanizeChange(suggestion.change)}, Score {formatScore(suggestion.score)}
               <Link
                 href={`/play?s=${encodeDecisions(suggestion.scenario.decisions)}`}
                 className={buttonVariants({ variant: "outline", size: "sm" })}

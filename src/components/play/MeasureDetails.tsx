@@ -17,7 +17,6 @@ export function MeasureDetails({ id, measure, open }: MeasureDetailsProps) {
   return (
     <div id={id} hidden={!open} className="pr-2 pb-3 pl-10 text-sm leading-relaxed text-muted-foreground">
       <p>
-        <span className="font-mono text-xs">{measure.id}</span>
         {effects.map(([code, value]) => (
           <span key={code}>
             {" · "}
