@@ -17,7 +17,6 @@ export function ResolutionBrief({ resolution, voiceRunId }: { resolution: Resolu
       <p className="line-clamp-3 max-w-[70ch] leading-relaxed group-has-[details[open]]/just:line-clamp-none">
         {justification}
       </p>
-      {voiceRunId ? <VoiceButton runId={voiceRunId} /> : null}
       <Disclosure
         title={
           <>
@@ -26,6 +25,7 @@ export function ResolutionBrief({ resolution, voiceRunId }: { resolution: Resolu
           </>
         }
       />
+      {voiceRunId ? <VoiceButton runId={voiceRunId} /> : null}
     </div>
   );
 }
