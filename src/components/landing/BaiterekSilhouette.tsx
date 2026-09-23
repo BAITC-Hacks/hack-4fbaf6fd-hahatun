@@ -3,12 +3,13 @@ export function BaiterekSilhouette() {
   return (
     <svg viewBox="0 0 200 400" aria-hidden="true" className="size-full">
       <g fill="var(--border)">
-        <rect x="23" y="386.7" width="154" height="5.3" rx="1" />
-        <rect x="36.2" y="381.4" width="127.6" height="5.3" rx="1" />
-        <rect x="49.4" y="376.2" width="101.2" height="5.3" rx="1" />
-        <path d="M115.8 376.2 L110.6 330.4 L107.5 242.4 L109.7 176.4 L117.6 141.2 L134.3 114.8 L146.6 88.4 L151.9 64.2 L48.1 64.2 L53.4 88.4 L65.7 114.8 L82.4 141.2 L90.3 176.4 L92.5 242.4 L89.4 330.4 L84.2 376.2 Z" />
+        <rect x="14" y="388.4" width="172" height="3.6" rx="1" />
+        <rect x="26" y="384.8" width="148" height="3.6" rx="1" />
+        <rect x="39.2" y="381.2" width="121.6" height="3.6" rx="1" />
+        <rect x="52" y="377.6" width="96" height="3.6" rx="1" />
+        <path d="M129.6 377.6 L124 352 L120.4 312 L118.4 264 L118 220 L120 188 L128.8 160 L142.4 132 L152 112 L158 92 L160.8 64 L39.2 64 L42 92 L48 112 L57.6 132 L71.2 160 L80 188 L82 220 L81.6 264 L79.6 312 L76 352 L70.4 377.6 Z" />
       </g>
-      <circle cx="100" cy="79.6" r="39.6" fill="var(--gold)" opacity="0.55" />
+      <circle cx="100" cy="92" r="36" fill="var(--gold)" opacity="0.55" />
     </svg>
   );
 }
