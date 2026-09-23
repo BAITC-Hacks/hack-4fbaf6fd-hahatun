@@ -30,7 +30,9 @@ export function SetPanel(props: SetPanelProps) {
       className="flex flex-col gap-5 rounded-lg border border-border bg-card p-5 md:sticky md:top-6"
     >
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="font-display text-lg font-semibold">Ваш набор</h2>
+        <h2 className="font-display text-lg font-semibold">
+          Ваш набор <span className="tabular-nums text-muted-foreground">{decisions.length} из 5</span>
+        </h2>
         <button
           type="button"
           disabled={decisions.length === 0}
