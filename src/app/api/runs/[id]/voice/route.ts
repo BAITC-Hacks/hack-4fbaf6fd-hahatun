@@ -16,7 +16,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     return new Response(new Uint8Array(bytes), {
       headers: { "Content-Type": "audio/mpeg", "Cache-Control": "private, max-age=3600", "Content-Length": String(bytes.byteLength) },
     });
-  } catch (err) {
-    return Response.json({ error: err instanceof Error ? err.message : "Озвучка не удалась" }, { status: 502 });
+  } catch {
+    // provider error details stay on the server
+    return Response.json({ error: "Озвучка не удалась, попробуйте ещё раз" }, { status: 502 });
   }
 }

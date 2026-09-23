@@ -16,7 +16,9 @@ export function voiceText(run: Pick<Run, "resolution">): string {
   const parts = [`Постановляю: ${OUTCOME_LABELS[outcome].toLowerCase()}.`, justification.trim()];
   if (mandates.length > 0) parts.push(`Поручения: ${mandates.map((m) => m.text.trim().replace(/\.$/, "")).join("; ")}.`);
   const text = humanizeText(parts.join(" ")).replace(/\s+/g, " ");
-  return text.length > MAX_CHARS ? `${text.slice(0, MAX_CHARS - 1).replace(/[^.!?]*$/, "").trim()}` : text;
+  if (text.length <= MAX_CHARS) return text;
+  const cut = text.slice(0, MAX_CHARS).replace(/[^.!?]*$/, "").trim();
+  return cut || text.slice(0, MAX_CHARS); // no sentence end in range: hard cut rather than an empty request
 }
 
 function voiceDir(): string {
