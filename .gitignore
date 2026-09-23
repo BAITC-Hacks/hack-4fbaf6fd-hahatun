@@ -22,3 +22,12 @@ tmp/
 # claude code — личное, не командное
 .claude/settings.local.json
 .claude/memory/
+
+# next / vercel
+.vercel
+*.pem
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

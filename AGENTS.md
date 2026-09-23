@@ -42,17 +42,16 @@ fixtures/           sample-run.json — полный Run для разработ
 
 ## Commands
 
-До задачи A0 команд нет. После скаффолда (реальные `scripts` вписать сюда):
-
 ```bash
 yarn dev              # http://localhost:3000
-yarn tsc --noEmit     # type-check, обязателен перед PR
-yarn test             # vitest: движок, валидатор, ревизор C1
-yarn lint
+yarn typecheck        # next typegen && tsc --noEmit — обязателен перед PR
+yarn test             # vitest run: движок, валидатор, ревизор C1
+yarn lint             # eslint
+yarn build            # next build, прогоняется перед сдачей
 ```
 
-Скаффолд `create-next-app` делать в пустую временную папку и переносить файлы сюда,
-потому что в репо уже лежат `docs/`, `.claude/`, `AGENTS.md`.
+Next 16 отличается от версий в обучающих данных моделей: перед правкой роутинга, `params`, кэширования
+и route handlers читать `node_modules/next/dist/docs/` (см. блок в конце файла).
 
 ## Критические правила
 
@@ -100,5 +99,15 @@ yarn lint
 
 ## Active Technologies
 
-Next.js 15, React 19, TypeScript, Tailwind + shadcn/ui, Recharts, Vercel AI SDK (`ai`, `@ai-sdk/openai`),
-zod, Drizzle + better-sqlite3, Vitest. Версии зафиксировать в `.claude/project/tech-stack.md` после A0.
+Next.js 16.3, React 19.2, TypeScript 5, Tailwind 4 + shadcn/ui, Recharts 3, Vercel AI SDK 7 (`ai`, `@ai-sdk/openai` 4),
+zod 4, Drizzle 0.45 + better-sqlite3, Vitest 5. Точные версии в `package.json` и `.claude/project/tech-stack.md`.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
