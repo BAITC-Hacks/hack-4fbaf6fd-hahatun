@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { calculate } from "@/lib/engine";
 import type { Decision } from "@/lib/types";
 import { sanitizeDecisions } from "@/lib/ui/cabinet";
+import { humanizeChange, humanizeText } from "@/lib/ui/humanize";
 import { getRun } from "@/lib/ui/run-source";
 import { decodeDecisions, encodeDecisions } from "@/lib/ui/scenario";
 
@@ -23,7 +24,7 @@ async function fromMandate(runId?: string, index?: string): Promise<{ decisions:
     if (!mandate) return null;
     return {
       decisions: mandate.improvement.scenario.decisions,
-      info: { change: mandate.improvement.change, text: mandate.text },
+      info: { change: humanizeChange(mandate.improvement.change), text: humanizeText(mandate.text) },
     };
   } catch {
     return null;
@@ -40,7 +41,7 @@ export default async function PlayPage({ searchParams }: PageProps<"/play">) {
     <>
       <PageHeader
         title="Кабинет решений"
-        lead="Выберите пять мер и районы для них. Score пересчитывается сразу, а консилиум откроется, когда набор пройдёт проверку."
+        lead="Выберите 5 мер в пределах 100 у.е. — Score пересчитывается сразу."
       />
       <Cabinet
         key={encodeDecisions(initial)}

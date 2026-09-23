@@ -1,6 +1,7 @@
-import type { Decision, EngineResult } from "@/lib/types";
+import type { Decision, EngineResult, MeasureId } from "@/lib/types";
 import { DISTRICT_LABELS } from "@/lib/types";
 import { formatDelta } from "@/lib/ui/format";
+import { MEASURE_SHORT } from "@/lib/ui/labels";
 import { cn } from "@/lib/utils";
 
 interface MeasureContributionsProps {
@@ -19,8 +20,8 @@ export function MeasureContributions({ contributions, decisions }: MeasureContri
   return (
     <ul className="flex flex-col gap-2">
       {rows.map((r) => (
-        <li key={r.measureId} className="grid grid-cols-[3rem_8rem_1fr_4rem] items-center gap-3 text-sm">
-          <span className="font-mono text-xs">{r.measureId}</span>
+        <li key={r.measureId} className="grid grid-cols-[14rem_7rem_1fr_4rem] items-center gap-3 text-sm">
+          <span className="first-letter:uppercase">{MEASURE_SHORT[r.measureId as MeasureId]}</span>
           <span className="text-muted-foreground">{placeOf(r.measureId)}</span>
           <span className="h-1.5 rounded-full bg-muted">
             <span

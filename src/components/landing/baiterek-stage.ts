@@ -1,13 +1,11 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { createCameraRig } from "./baiterek-camera";
 import { createBaiterekModel, disposeModel, type BaiterekColors } from "./baiterek-model";
+import { createPost } from "./baiterek-post";
 import { createSpinControls } from "./spin-controls";
 
-const FOV = 30;
-const LOOK_AT = new THREE.Vector3(0, 4.25, 0);
-const FRAME_H = 9.1; // model height (~8.1) plus breathing room
-const FRAME_W = 4.4; // base diameter (3.5) plus breathing room
-const CAMERA_Y = 1.1; // below the look-at point: slightly low angle, the tower feels tall
+const MAX_DPR = 1.75;
 
 // Resolves any CSS color syntax (hex, rgb, oklch) through a 1px canvas.
 function cssColors(names: string[]): THREE.Color[] {
@@ -24,24 +22,31 @@ function cssColors(names: string[]): THREE.Color[] {
 }
 
 function readPalette() {
-  const [gold, card, secondary, background, foreground, sky] = cssColors([
+  const [gold, card, secondary, background, foreground, sky, muted] = cssColors([
     "--gold",
     "--card",
     "--secondary",
     "--background",
     "--foreground",
     "--sky",
+    "--muted-foreground",
   ]);
-  const colors: BaiterekColors = { gold, branch: card.clone().lerp(gold, 0.06).lerp(foreground, 0.08), stone: secondary };
+  const colors: BaiterekColors = {
+    gold,
+    branch: card.clone().lerp(gold, 0.05).lerp(foreground, 0.06),
+    stone: secondary.clone().lerp(foreground, 0.04),
+    shaft: muted.clone().lerp(foreground, 0.25),
+    glass: sky.clone().lerp(foreground, 0.45),
+  };
   return { colors, background, foreground, sky };
 }
 
 function addLights(scene: THREE.Scene, paper: THREE.Color, sky: THREE.Color) {
-  scene.add(new THREE.HemisphereLight(0xffffff, paper, 0.2));
-  const key = new THREE.DirectionalLight(0xfff0d8, 2); // warm, upper left
+  scene.add(new THREE.HemisphereLight(0xffffff, paper, 0.3));
+  const key = new THREE.DirectionalLight(0xfff0d8, 1.5); // warm, upper left
   key.position.set(-6, 9, 6);
-  const rim = new THREE.DirectionalLight(sky.clone().lerp(new THREE.Color(0xffffff), 0.4), 1.8); // cool, behind
-  rim.position.set(4, 6, -7);
+  const rim = new THREE.DirectionalLight(sky.clone().lerp(new THREE.Color(0xffffff), 0.35), 1.6); // cool, behind
+  rim.position.set(5, 7, -7);
   scene.add(key, rim);
 }
 
@@ -51,42 +56,30 @@ function createContactShadow(ink: THREE.Color): THREE.Mesh {
   canvas.width = canvas.height = 128;
   const ctx = canvas.getContext("2d");
   if (ctx) {
-    const rgb = `${Math.round(ink.r * 255)}, ${Math.round(ink.g * 255)}, ${Math.round(ink.b * 255)}`;
+    const rgb = ink.getStyle(THREE.SRGBColorSpace).replace("rgb(", "").replace(")", "");
     const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-    g.addColorStop(0, `rgba(${rgb}, 0.32)`);
-    g.addColorStop(0.55, `rgba(${rgb}, 0.12)`);
+    g.addColorStop(0, `rgba(${rgb}, 0.34)`);
+    g.addColorStop(0.5, `rgba(${rgb}, 0.12)`);
     g.addColorStop(1, `rgba(${rgb}, 0)`);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, 128, 128);
   }
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, toneMapped: false });
-  const plane = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 5.2), material);
+  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false });
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 2.8), material);
   plane.rotation.x = -Math.PI / 2;
-  plane.position.y = 0.002;
+  plane.position.y = 0.37; // on the podium top, around the foot
   return plane;
 }
 
-function fitCamera(camera: THREE.PerspectiveCamera, width: number, height: number) {
-  camera.aspect = width / Math.max(height, 1);
-  const t = Math.tan(THREE.MathUtils.degToRad(FOV / 2));
-  const distance = Math.max(FRAME_H / (2 * t), FRAME_W / (2 * t * camera.aspect));
-  camera.position.set(0, CAMERA_Y, distance);
-  camera.lookAt(LOOK_AT);
-  camera.updateProjectionMatrix();
-}
-
 function createRenderer(host: HTMLElement) {
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor(0x000000, 0);
+  const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_DPR));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.95;
+  renderer.toneMappingExposure = 0.9;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.domElement.style.display = "block";
-  renderer.domElement.style.width = "100%";
-  renderer.domElement.style.height = "100%";
+  Object.assign(renderer.domElement.style, { display: "block", width: "100%", height: "100%" });
   host.appendChild(renderer.domElement);
   return renderer;
 }
@@ -114,40 +107,69 @@ function addEnvironment(renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
   const envMap = pmrem.fromScene(room, 0.04).texture;
   room.dispose();
   scene.environment = envMap;
-  scene.environmentIntensity = 1.1;
-  return () => {
+  scene.environmentIntensity = 0.4;
+  const dispose = () => {
     envMap.dispose();
     pmrem.dispose();
   };
+  return { envMap, dispose };
+}
+
+// 0 while the hero is fully in view, 1 once the canvas bottom leaves the top of the viewport.
+function scrollProgress(host: HTMLElement): number {
+  const rect = host.getBoundingClientRect();
+  const bottom = rect.bottom + window.scrollY;
+  return THREE.MathUtils.clamp(window.scrollY / Math.max(bottom, 1), 0, 1);
+}
+
+export interface StageEvents {
+  /** Elevator height in metres, every frame of the intro and once more at 97. */
+  onLift(metres: number): void;
+  /** Podium and deck positions (fractions of the canvas height) in the final frame. */
+  onAnchors(bottom: number, top: number): void;
+}
+
+// Scene with lights, studio reflections, the model and its contact shadow under a turnable root.
+function buildScene(renderer: THREE.WebGLRenderer) {
+  const { colors, background, foreground, sky } = readPalette();
+  const scene = new THREE.Scene();
+  const env = addEnvironment(renderer, scene);
+  addLights(scene, background, sky);
+  const root = new THREE.Group();
+  root.add(createBaiterekModel(colors, env.envMap), createContactShadow(foreground));
+  scene.add(root);
+  return { scene, root, env, background };
 }
 
 /** Mounts the interactive Baiterek into host; returns a cleanup that frees every GPU resource. */
-export function mountBaiterek(host: HTMLElement): () => void {
-  const { colors, background, foreground, sky } = readPalette();
+export function mountBaiterek(host: HTMLElement, events: StageEvents): () => void {
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const renderer = createRenderer(host);
-  const scene = new THREE.Scene();
-  const disposeEnvironment = addEnvironment(renderer, scene);
-  addLights(scene, background, sky);
-
-  const root = new THREE.Group();
-  root.add(createBaiterekModel(colors), createContactShadow(foreground));
-  scene.add(root);
-  const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 100);
+  const { scene, root, env, background } = buildScene(renderer);
+  const rig = createCameraRig();
+  if (reduced) rig.skip();
+  const post = createPost(renderer, scene, rig.camera, background);
   const controls = createSpinControls(host);
 
   let last = performance.now();
+  let lastLift = -1;
   const frame = (now: number) => {
-    const dt = Math.min((now - last) / 1000, 0.05);
+    // rAF timestamps can precede the performance.now() taken when the loop (re)started.
+    const dt = THREE.MathUtils.clamp((now - last) / 1000, 0, 0.05);
     last = now;
     const { yaw, tilt } = controls.update(dt);
     root.rotation.set(tilt, yaw, 0);
-    renderer.render(scene, camera);
+    const lift = rig.update(dt, reduced ? 0 : scrollProgress(host));
+    if (lift !== lastLift) events.onLift((lastLift = lift));
+    post.render();
   };
   const resize = new ResizeObserver(() => {
     const { clientWidth: w, clientHeight: h } = host;
     renderer.setSize(w, h, false);
-    fitCamera(camera, w, h);
-    renderer.render(scene, camera);
+    post.setSize(w, h, renderer.getPixelRatio());
+    rig.fit(w, h);
+    events.onAnchors(rig.anchors.bottom, rig.anchors.top);
+    post.render();
   });
   resize.observe(host);
   const stopWatching = watchVisibility(host, (running) => {
@@ -161,7 +183,8 @@ export function mountBaiterek(host: HTMLElement): () => void {
     resize.disconnect();
     controls.dispose();
     disposeModel(root);
-    disposeEnvironment();
+    post.dispose();
+    env.dispose();
     renderer.dispose();
     renderer.forceContextLoss();
     renderer.domElement.remove();

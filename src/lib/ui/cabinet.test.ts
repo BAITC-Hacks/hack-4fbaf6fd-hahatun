@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Decision } from "@/lib/types";
-import { sanitizeDecisions, summarizeSet } from "./cabinet";
+import { relationHints, sanitizeDecisions, summarizeSet } from "./cabinet";
 import { formatScore } from "./format";
 
 // Example set from docs/source/dataset.md §3.
@@ -39,5 +39,17 @@ describe("cabinet summary", () => {
   it("sanitizes shared or prefilled sets", () => {
     const input = [{ measureId: "M12", districtId: "nura" }, { measureId: "M7" }, { measureId: "M7", districtId: "esil" }] as Decision[];
     expect(sanitizeDecisions(input)).toEqual([{ measureId: "M12" }, { measureId: "M7" }]);
+  });
+
+  it("names measures by title in errors and hints only against the current set", () => {
+    const s = summarizeSet([{ measureId: "M1", districtId: "esil" }, { measureId: "M3", districtId: "nura" }]);
+    expect(s.errors.map((e) => e.message)).toContain(
+      "«Выделенные полосы для автобусов» и «Линия ЛРТ / расширение» несовместимы: Либо BRT, либо ЛРТ, в любом районе",
+    );
+    expect(relationHints("M10", [])).toEqual([]);
+    expect(relationHints("M10", [{ measureId: "M12" }])).toEqual([
+      { tone: "synergy", text: "Вместе с «Единая цифровая платформа обращений»: +2 к безопасности улиц" },
+    ]);
+    expect(relationHints("M7", [{ measureId: "M4", districtId: "nura" }])[0].tone).toBe("conflict");
   });
 });

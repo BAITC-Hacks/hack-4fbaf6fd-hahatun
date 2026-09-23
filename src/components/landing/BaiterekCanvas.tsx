@@ -11,11 +11,13 @@ const BaiterekScene = dynamic(() => import("./BaiterekScene").then((m) => m.Bait
 
 export function BaiterekCanvas() {
   return (
-    <figure className="flex flex-col items-center gap-2">
-      <div className="h-[360px] w-full lg:h-[520px]">
+    <figure className="flex flex-col gap-2 lg:-mr-6">
+      <div className="h-[420px] w-full lg:h-[660px]">
         <BaiterekScene />
       </div>
-      <figcaption className="text-xs text-muted-foreground">Байтерек — можно покрутить</figcaption>
+      <figcaption className="text-center text-xs text-muted-foreground">
+        Байтерек, 97 метров до смотровой площадки — можно покрутить
+      </figcaption>
     </figure>
   );
 }

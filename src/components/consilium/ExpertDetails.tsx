@@ -1,6 +1,7 @@
 import { ChevronRight } from "lucide-react";
 import type { ExpertOpinion } from "@/lib/types";
 import { DISTRICT_LABELS } from "@/lib/types";
+import { MEASURE_SHORT } from "@/lib/ui/labels";
 
 // Risk, tradeoff and suggested measure, collapsed by default.
 export function ExpertDetails({ opinion }: { opinion: ExpertOpinion }) {
@@ -24,7 +25,7 @@ export function ExpertDetails({ opinion }: { opinion: ExpertOpinion }) {
           <div>
             <dt className="text-xs text-muted-foreground">Предлагает</dt>
             <dd>
-              <span className="font-mono text-xs">{suggestion.measureId}</span>
+              <span className="first-letter:uppercase">{MEASURE_SHORT[suggestion.measureId]}</span>
               {suggestion.districtId && ` · ${DISTRICT_LABELS[suggestion.districtId]}`}
             </dd>
           </div>
