@@ -1,4 +1,5 @@
 import type { Run } from "@/lib/types";
+import { UsagePanel } from "@/components/result/UsagePanel";
 import { ArbiterResolution } from "./ArbiterResolution";
 import { DraftHistory } from "./DraftHistory";
 import { ExpertTable } from "./ExpertTable";
@@ -33,6 +34,7 @@ export function ConsiliumHall({ run }: { run: Run }) {
       </HallSection>
       <HallSection title="Резолюция арбитра">
         <ArbiterResolution resolution={run.resolution} runId={run.id} facts={run.facts} />
+        <UsagePanel run={run} />
       </HallSection>
     </section>
   );

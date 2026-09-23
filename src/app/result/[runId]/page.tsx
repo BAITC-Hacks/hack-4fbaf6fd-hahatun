@@ -3,6 +3,7 @@ import { ConsiliumHall } from "@/components/consilium/ConsiliumHall";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { DistrictComparison } from "@/components/result/DistrictComparison";
 import { HowCalculated } from "@/components/result/HowCalculated";
+import { ShockEventCard } from "@/components/result/ShockEventCard";
 import { VerdictHeader } from "@/components/result/VerdictHeader";
 import { getRun } from "@/lib/ui/run-source";
 
@@ -25,6 +26,7 @@ export default async function ResultPage({ params }: PageProps<"/result/[runId]"
       />
       <div className="flex flex-col gap-8">
         <VerdictHeader run={run} />
+        <ShockEventCard run={run} />
         <DistrictComparison districts={run.engine.districts} />
         <HowCalculated run={run} />
         <ConsiliumHall run={run} />

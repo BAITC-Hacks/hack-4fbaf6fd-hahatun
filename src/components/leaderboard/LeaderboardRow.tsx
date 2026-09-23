@@ -25,9 +25,11 @@ export function LeaderboardRow({ run, rank }: { run: RunSummary; rank: number })
   return (
     <tr className="border-t border-border">
       <td className={cn("px-4 py-3 font-mono tabular-nums", rankTone(rank))}>{rank}</td>
-      <td className="px-4 py-3 font-medium">
+      <td className="min-w-48 px-4 py-3 font-medium">
         <span className="flex items-center gap-2">
-          {run.teamName}
+          <span className="max-w-64 truncate" title={run.teamName}>
+            {run.teamName}
+          </span>
           {run.isSample && (
             <Badge variant="outline" className="text-muted-foreground">
               пример

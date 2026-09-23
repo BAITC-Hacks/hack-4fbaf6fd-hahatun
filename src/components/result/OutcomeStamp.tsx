@@ -25,7 +25,10 @@ export function OutcomeStamp({ outcome, size = "lg", className }: OutcomeStampPr
     >
       <span className="flex flex-col items-center gap-1">
         <span className="font-mono text-[0.6em] tracking-[0.2em] opacity-80">Акимат · Астана</span>
-        <span>{OUTCOME_LABELS[outcome]}</span>
+        {/* The longest label needs a smaller size to stay inside the ring. */}
+        <span className={cn(outcome === "approve_with_conditions" && "text-[0.82em] tracking-[0.02em]")}>
+          {OUTCOME_LABELS[outcome]}
+        </span>
       </span>
     </div>
   );
