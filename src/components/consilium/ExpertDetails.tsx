@@ -23,8 +23,8 @@ export function ExpertDetails({ opinion }: { opinion: ExpertOpinion }) {
         {suggestion && (
           <div>
             <dt className="text-xs text-muted-foreground">Предлагает</dt>
-            <dd className="font-mono text-xs">
-              {suggestion.measureId}
+            <dd>
+              <span className="font-mono text-xs">{suggestion.measureId}</span>
               {suggestion.districtId && ` · ${DISTRICT_LABELS[suggestion.districtId]}`}
             </dd>
           </div>

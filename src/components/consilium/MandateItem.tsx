@@ -16,9 +16,9 @@ export function MandateItem({ mandate, index, runId }: MandateItemProps) {
   const href = `/play?from=${encodeURIComponent(runId)}&mandate=${index}`;
   return (
     <li className="space-y-2 pl-1">
-      <p className="leading-relaxed">{mandate.text}</p>
+      <p className="max-w-[70ch] leading-relaxed">{mandate.text}</p>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-        <span className="font-mono text-xs">{improvement.change}</span>
+        <span className="text-muted-foreground">{improvement.change}</span>
         <span className="tabular-nums">
           Score {formatScore(improvement.score)}{" "}
           <span className={improvement.delta > 0 ? "text-outcome-approve" : "text-destructive"}>

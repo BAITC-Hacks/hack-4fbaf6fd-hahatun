@@ -43,7 +43,7 @@ export function ScoreRadar({ district }: { district: DistrictResult }) {
         <Tooltip
           labelFormatter={(code) => `${code} · ${INDICATOR_LABELS[code as Indicator] ?? ""}`}
           formatter={(value) => formatValue(Number(value))}
-          contentStyle={{ borderRadius: 8, borderColor: "var(--border)", fontSize: 12 }}
+          contentStyle={{ borderRadius: 8, borderColor: "var(--border)", backgroundColor: "var(--popover)", fontSize: 12 }}
         />
       </RadarChart>
       <figcaption className="flex gap-4 text-xs text-muted-foreground">

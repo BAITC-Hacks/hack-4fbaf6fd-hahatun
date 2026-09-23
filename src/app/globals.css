@@ -60,9 +60,10 @@
   /* Letterhead palette: cool paper, navy ink, sky and gold of Astana */
   --background: #f3f6f8;
   --foreground: #10283a;
-  --card: #ffffff;
+  /* Surfaces are tinted toward the ink anchor: no pure white anywhere */
+  --card: #fbfcfd;
   --card-foreground: #10283a;
-  --popover: #ffffff;
+  --popover: #fbfcfd;
   --popover-foreground: #10283a;
   --primary: #10283a;
   --primary-foreground: #f3f6f8;
@@ -91,7 +92,7 @@
   --chart-4: #6a48a8;
   --chart-5: #8aa0b0;
   --radius: 0.5rem;
-  --sidebar: #ffffff;
+  --sidebar: #fbfcfd;
   --sidebar-foreground: #10283a;
   --sidebar-primary: #10283a;
   --sidebar-primary-foreground: #f3f6f8;
@@ -144,5 +145,21 @@
   }
   html {
     @apply font-sans;
+    accent-color: var(--primary);
+    caret-color: var(--sky);
+    scrollbar-color: var(--input) var(--background);
   }
+  ::selection {
+    background-color: color-mix(in oklch, var(--sky) 22%, var(--card));
+    color: var(--foreground);
+  }
+  a {
+    text-underline-offset: 0.22em;
+    text-decoration-thickness: 1px;
+  }
+}
+
+/* Focus rings appear instantly: unlayered, so it beats `transition-all` utilities (shadcn Button). */
+:focus-visible {
+  transition-property: color, background-color, border-color, opacity, transform;
 }

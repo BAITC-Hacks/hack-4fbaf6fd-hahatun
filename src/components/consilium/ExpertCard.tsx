@@ -23,10 +23,8 @@ export function ExpertCard({ opinion, facts }: ExpertCardProps) {
     <article className="flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
       <header className="flex items-start justify-between gap-2">
         <div>
-          <p className="font-mono text-[0.7rem] tracking-[0.12em] text-muted-foreground uppercase">
-            {ROLE_LABELS[opinion.role]}
-          </p>
-          <p className="mt-0.5 font-medium">{opinion.name}</p>
+          <p className="font-medium">{opinion.name}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{ROLE_LABELS[opinion.role]}</p>
         </div>
         <span className={cn("rounded-full border px-2 py-0.5 text-xs font-medium", stance.className)}>
           {stance.label}

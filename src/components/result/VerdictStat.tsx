@@ -3,12 +3,12 @@ interface VerdictStatProps {
   children: React.ReactNode;
 }
 
-// One label/value pair in the verdict header grid; must live inside a <dl>.
+// One row of the verdict's definition list: label left, value right, hairline between rows; lives inside a <dl>.
 export function VerdictStat({ label, children }: VerdictStatProps) {
   return (
-    <div className="flex flex-col gap-1">
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="text-sm font-medium">{children}</dd>
+    <div className="col-span-2 grid grid-cols-subgrid gap-x-6 border-t border-border py-2 first:border-t-0 first:pt-0">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd>{children}</dd>
     </div>
   );
 }

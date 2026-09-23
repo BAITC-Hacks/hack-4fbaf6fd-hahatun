@@ -43,7 +43,7 @@ export function LiveRun() {
   return (
     <div className="flex flex-col gap-8">
       <div className="space-y-3">
-        {notice && <p className="border-l-2 border-gold pl-3 text-sm text-muted-foreground">{notice}</p>}
+        {notice && <p className="rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm">{notice}</p>}
         <p aria-live="polite" className="text-sm text-muted-foreground">
           {STATUS_LINE[status]}
           {status === "done" && run.runId && (

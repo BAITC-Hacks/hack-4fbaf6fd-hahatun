@@ -14,12 +14,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             <AppMark className="size-10 shrink-0" />
             <span className="flex flex-col gap-0.5">
-              <span className="font-display text-[0.95rem] font-semibold tracking-[0.06em] uppercase">
-                Аким на 5 часов
-              </span>
-              <span className="font-mono text-[0.68rem] tracking-[0.12em] text-muted-foreground uppercase">
-                Астана · бюджет 100 у.е. · ровно 5 решений
-              </span>
+              <span className="font-display text-base leading-tight font-semibold">Аким на 5 часов</span>
+              <span className="text-xs text-muted-foreground">Астана · бюджет 100 у.е. · ровно 5 решений</span>
             </span>
           </Link>
           <MainNav />

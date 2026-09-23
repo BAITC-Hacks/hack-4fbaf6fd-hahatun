@@ -2,7 +2,6 @@ import { ShieldCheck } from "lucide-react";
 import type { Run } from "@/lib/types";
 import { DISTRICT_LABELS } from "@/lib/types";
 import { formatPercent, formatScore } from "@/lib/ui/format";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { VerdictStat } from "@/components/result/VerdictStat";
 
@@ -12,12 +11,12 @@ const DATE_FORMAT = new Intl.DateTimeFormat("ru-RU", {
   timeZone: "Asia/Almaty",
 });
 
-// Secondary verdict numbers: percentile, weakest district, criticals, review badge, run meta.
+// Secondary verdict facts as a tidy definition list: percentile, weakest district, criticals, review, run meta.
 export function VerdictStats({ run }: { run: Run }) {
   const { engine, optimizer } = run;
   const review = run.reviews.at(-1);
   return (
-    <dl className="grid flex-1 grid-cols-2 gap-x-8 gap-y-4 border-l border-border pl-8 lg:grid-cols-3">
+    <dl className="grid min-w-72 flex-1 grid-cols-[auto_minmax(0,1fr)] text-sm">
       <VerdictStat label="Перцентиль">
         лучше, чем <span className="tabular-nums">{formatPercent(optimizer.percentile)}</span> допустимых наборов
       </VerdictStat>
@@ -32,14 +31,18 @@ export function VerdictStats({ run }: { run: Run }) {
       </VerdictStat>
       {review && (
         <VerdictStat label="Ревизия заключения">
-          <Badge variant="outline" className={review.ok ? "text-outcome-approve" : "text-destructive"}>
-            <ShieldCheck aria-hidden />
-            проверено {review.passed} из {review.total}
-          </Badge>
+          <span
+            className={cn("inline-flex items-center gap-1.5", review.ok ? "text-outcome-approve" : "text-destructive")}
+          >
+            <ShieldCheck aria-hidden className="size-4" />
+            проверено <span className="tabular-nums">{review.passed} из {review.total}</span>
+          </span>
         </VerdictStat>
       )}
       <VerdictStat label="Команда">{run.teamName}</VerdictStat>
-      <VerdictStat label="Дата прогона">{DATE_FORMAT.format(new Date(run.createdAt))}</VerdictStat>
+      <VerdictStat label="Дата прогона">
+        <span className="tabular-nums">{DATE_FORMAT.format(new Date(run.createdAt))}</span>
+      </VerdictStat>
     </dl>
   );
 }

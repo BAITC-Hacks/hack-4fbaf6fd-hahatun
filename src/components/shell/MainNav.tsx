@@ -30,7 +30,7 @@ export function MainNav() {
             <>
               <span
                 className={cn(
-                  "grid size-6 place-items-center rounded-full border font-mono text-xs tabular-nums",
+                  "grid size-6 place-items-center rounded-full border text-xs font-medium tabular-nums",
                   current
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-input text-muted-foreground",

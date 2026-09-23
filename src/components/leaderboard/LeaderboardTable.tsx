@@ -32,7 +32,7 @@ export function LeaderboardTable({ runs }: { runs: RunSummary[] }) {
     <div className="overflow-x-auto rounded-xl border border-border bg-card">
       <table className="w-full text-sm">
         <thead>
-          <tr className="font-mono text-[0.68rem] tracking-[0.12em] text-muted-foreground uppercase">
+          <tr className="text-xs text-muted-foreground">
             {COLUMNS.map((c) => (
               <th
                 key={c.label}

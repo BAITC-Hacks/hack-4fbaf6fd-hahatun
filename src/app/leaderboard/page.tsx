@@ -13,7 +13,6 @@ export default async function LeaderboardPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Сравнение команд"
         title="Лидерборд"
         lead="Все прогоны на одних исходных данных и одном бюджете. Выше — тот, чей набор дал больший Score."
       />

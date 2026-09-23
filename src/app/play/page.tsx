@@ -39,7 +39,6 @@ export default async function PlayPage({ searchParams }: PageProps<"/play">) {
   return (
     <>
       <PageHeader
-        eyebrow="Шаг 2 из 3"
         title="Кабинет решений"
         lead="Выберите пять мер и районы для них. Score пересчитывается сразу, а консилиум откроется, когда набор пройдёт проверку."
       />

@@ -15,15 +15,15 @@ export default async function ResultPage({ params }: PageProps<"/result/[runId]"
   return (
     <>
       <PageHeader
-        eyebrow={
-          <>
-            Шаг 3 из 3 · прогон <span className="normal-case">{runId}</span>
-          </>
-        }
         title="Вердикт"
         lead="Итоговый Score, изменения по районам и резолюция консилиума."
+        meta={
+          <>
+            Прогон <span className="font-mono">{runId}</span>
+          </>
+        }
       />
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         <VerdictHeader run={run} />
         <DistrictComparison districts={run.engine.districts} />
         <HowCalculated run={run} />

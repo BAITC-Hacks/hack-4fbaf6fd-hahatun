@@ -8,10 +8,8 @@ export function ExpertPendingCard({ role }: { role: ExpertRole }) {
       aria-busy="true"
       className="flex min-h-40 animate-pulse flex-col gap-3 rounded-xl bg-card/60 p-4 ring-1 ring-foreground/10 motion-reduce:animate-none"
     >
-      <p className="font-mono text-[0.7rem] tracking-[0.12em] text-muted-foreground uppercase">
-        {ROLE_LABELS[role]}
-      </p>
-      <p className="text-sm text-muted-foreground">думает…</p>
+      <p className="font-medium">{ROLE_LABELS[role]}</p>
+      <p className="-mt-2 text-xs text-muted-foreground">думает…</p>
       <div className="space-y-2">
         <div className="h-2 w-full rounded-full bg-muted" />
         <div className="h-2 w-4/5 rounded-full bg-muted" />

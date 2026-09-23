@@ -39,7 +39,7 @@ export function DistrictComparison({ districts }: { districts: DistrictResult[] 
         caption="D районов после решений, под значением — изменение"
       />
       <DistrictSwitcher districts={districts} selected={district.id} onSelect={setSelected} />
-      <CardContent className="grid grid-cols-[minmax(0,5fr)_minmax(0,6fr)] items-start gap-6 px-0">
+      <CardContent className="grid items-start gap-6 px-0 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
         <ScoreRadar district={district} />
         <IndicatorTable district={district} />
       </CardContent>

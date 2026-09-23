@@ -5,15 +5,15 @@ import { DeltaValue } from "@/components/result/DeltaValue";
 import { OutcomeStamp } from "@/components/result/OutcomeStamp";
 import { VerdictStats } from "@/components/result/VerdictStats";
 
-// Verdict summary: big Score with delta, secondary stats and the outcome stamp.
+// Verdict summary: big Score with delta, a definition list of supporting facts and the outcome stamp.
 export function VerdictHeader({ run }: { run: Run }) {
   const { engine } = run;
   return (
     <Card className="gap-6 px-6 py-6">
-      <div className="flex items-start gap-8">
+      <div className="flex flex-wrap items-start gap-x-10 gap-y-6">
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-muted-foreground">Astana Quality of Life Score</p>
-          <p className="font-display text-6xl font-semibold tracking-tight tabular-nums">
+          <p className="text-sm text-muted-foreground">Astana Quality of Life Score</p>
+          <p className="font-display text-6xl leading-none font-semibold tracking-tight tabular-nums">
             {formatScore(engine.score)}
           </p>
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
