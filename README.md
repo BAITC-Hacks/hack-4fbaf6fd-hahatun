@@ -37,12 +37,11 @@ AI-симулятор управления городом для кейса Hack
 
 ## 4. Технологии
 
-<!-- версии из package.json, заполнить при финале -->
-- Next.js 16 (App Router, route handlers, SSE), React 19, TypeScript 5
-- Tailwind 4 + shadcn/ui, Recharts, lucide-react
-- Vercel AI SDK 7 + `@ai-sdk/openai`, structured outputs через zod-схемы
-- OpenAI API: модели задаются в `.env` (`OPENAI_EXPERT_MODEL`, `OPENAI_JUDGE_MODEL`)
-- Vitest, Docker (standalone-сборка Next)
+- Next.js 16.3 (App Router, route handlers, SSE), React 19.2, TypeScript 5
+- Tailwind 4 + shadcn/ui, Recharts 3, lucide-react
+- Vercel AI SDK 7 + `@ai-sdk/openai` 4, structured outputs через zod 4 (strict JSON schema)
+- OpenAI API: эксперты на `gpt-5.4-mini`, синтезатор, ревизоры и арбитр на `gpt-5.5` (меняется в `.env`)
+- Vitest 5, Docker (standalone-сборка Next)
 
 ## 5. Архитектура
 
@@ -88,11 +87,21 @@ docker compose up --build   # http://localhost:3000, прогоны в volume ru
 
 ## 7. Как проверить решение
 
-<!-- заполнить после сквозного прогона: ожидаемые числа и скриншоты -->
-1. Открыть `/play`, собрать пример организаторов: M7 Нура, M8 Нура, M10 Нура, M12, M5 Сарыарка. Стоимость 95, живой Score показывает **56.54**.
-2. Заменить M5 на M3 (ЛРТ) в Нуре: Score меняется на **57.21**. Убрать одну меру: кнопка блокируется, причина «нужно ровно 5 решений».
-3. Нажать «На консилиум». В зале заседаний появляются шесть экспертов, черновик, табло ревизоров, резолюция.
-4. Без ключа те же шаги дают те же числа, а тексты помечены как фолбэк.
+**Через интерфейс**
+1. Открыть `/play`, собрать пример организаторов: M7 Нура, M8 Нура, M10 Нура, M12, M5 Сарыарка. Стоимость 95, живой Score показывает **56.54** (в документе кейса ≈ 56.5).
+2. Заменить M5 на M3 (ЛРТ) в Нуре: Score меняется на **57.21**. Убрать одну меру: кнопка блокируется, причина «нужно ровно 5 решений». Добавить M3 при выбранной M1: причина «несовместимы».
+3. Нажать «На консилиум». В зале заседаний появляются шесть экспертов, черновик, табло ревизоров, резолюция. С ключом прогон занимает 30–60 секунд и стоит около 4 центов; без ключа около секунды, тексты помечены как фолбэк.
+
+**Через API** (сервер на 3000):
+
+```bash
+curl -N -X POST http://localhost:3000/api/run -H 'Content-Type: application/json' \
+  -d '{"teamName":"Демо","scenario":{"decisions":[{"measureId":"M7","districtId":"nura"},{"measureId":"M8","districtId":"nura"},{"measureId":"M10","districtId":"nura"},{"measureId":"M12"},{"measureId":"M5","districtId":"saryarka"}]}}'
+```
+
+Ожидаемый поток: `stage validate/engine/optimize`, событие `engine` со `score: 56.54` и 32 фактами, `optimizer` с улучшением «M5 Сарыарка → M3 Линия ЛРТ, Нура, 57.21», шесть событий `expert`, `draft`, `review` (с ключом обычно 6 из 6), `resolution` с исходом `approve` и поручением, `done` с `runId`. Затем `GET /api/runs/<runId>` возвращает сохранённый прогон. Реальный прогон с LLM сохранён как образец в `fixtures/live-run.json`.
+
+**Тесты:** `yarn test` — 62 теста, среди них золотой тест формулы (база 52.56, пример 56.54, синергия M10+M12), валидатор по каждому правилу, проверка чисел ревизора C1, цикл пересмотра с cap 2, хранилище с защитой от path traversal.
 
 ## 8. Данные и интеграции
 
