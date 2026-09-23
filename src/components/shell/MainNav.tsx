@@ -19,10 +19,11 @@ const STEPS: Step[] = [
 
 export function MainNav() {
   const pathname = usePathname();
+  const onLeaderboard = pathname.startsWith("/leaderboard");
 
   return (
-    <nav aria-label="Этапы игры">
-      <ol className="flex items-center gap-2 text-sm">
+    <nav aria-label="Навигация" className="flex items-center gap-4 text-sm">
+      <ol aria-label="Этапы игры" className="flex items-center gap-2">
         {STEPS.map((step, i) => {
           const current = step.isCurrent(pathname);
           const inner = (
@@ -66,6 +67,17 @@ export function MainNav() {
           );
         })}
       </ol>
+      <span aria-hidden="true" className="h-5 w-px bg-input" />
+      <Link
+        href="/leaderboard"
+        aria-current={onLeaderboard ? "page" : undefined}
+        className={cn(
+          "rounded-md p-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+          onLeaderboard ? "font-medium" : "text-muted-foreground hover:text-foreground",
+        )}
+      >
+        Лидерборд
+      </Link>
     </nav>
   );
 }
