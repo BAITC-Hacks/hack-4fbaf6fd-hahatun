@@ -62,7 +62,8 @@ async function readStoredSummaries(): Promise<RunSummary[]> {
 
 /** All stored runs, best Score first. Falls back to the fixture so the page is never blank in dev. */
 export async function listRuns(): Promise<RunSummary[]> {
-  const stored = await readStoredSummaries();
+  // sandbox runs never compete; filter before the fixture fallback so the page is never blank
+  const stored = (await readStoredSummaries()).filter((s) => !s.sandbox);
   const list = stored.length > 0 ? stored : [toSummary(sample as Run, true)];
   return list.sort((a, b) => b.score - a.score);
 }

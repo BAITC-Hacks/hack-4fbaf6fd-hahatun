@@ -315,7 +315,7 @@ export function getOptimum(file: string = cachePath()): Promise<Optimum> {
 }
 
 // Sandbox datasets: in-memory only (never written to disk), keyed by a hash of the dataset, small LRU.
-const SANDBOX_CACHE_LIMIT = 8;
+const SANDBOX_CACHE_LIMIT = 2; // each entry holds the sorted scores of every valid set
 const sandboxOptimum = new Map<string, Optimum>();
 
 function datasetHash(ds: Dataset): string {
