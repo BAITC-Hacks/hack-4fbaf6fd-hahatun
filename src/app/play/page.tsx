@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { calculate } from "@/lib/engine";
 import type { Decision } from "@/lib/types";
 import { sanitizeDecisions } from "@/lib/ui/cabinet";
-import { humanizeChange, humanizeText } from "@/lib/ui/humanize";
+import { humanizeChange, humanizeText, namesOf } from "@/lib/ui/humanize";
 import { getRun } from "@/lib/ui/run-source";
 import { decodeDecisions, encodeDecisions } from "@/lib/ui/scenario";
 
@@ -20,11 +20,13 @@ const one = (v: Param) => (Array.isArray(v) ? v[0] : v);
 async function fromMandate(runId?: string, index?: string): Promise<{ decisions: Decision[]; info: MandateInfo } | null> {
   if (!runId || !index || !/^\d+$/.test(index)) return null;
   try {
-    const mandate = (await getRun(runId)).resolution.mandates[Number(index)];
+    const run = await getRun(runId);
+    const mandate = run.resolution.mandates[Number(index)];
     if (!mandate) return null;
+    const names = namesOf(run.sandbox?.dataset);
     return {
       decisions: mandate.improvement.scenario.decisions,
-      info: { change: humanizeChange(mandate.improvement.change), text: humanizeText(mandate.text) },
+      info: { change: humanizeChange(mandate.improvement.change, names), text: humanizeText(mandate.text, names) },
     };
   } catch {
     return null;

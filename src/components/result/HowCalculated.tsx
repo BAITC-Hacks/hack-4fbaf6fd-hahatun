@@ -3,6 +3,7 @@ import { CRITICAL_THRESHOLD, HORIZON_QUARTERS } from "@/lib/types";
 import { formatScore } from "@/lib/ui/format";
 import { Separator } from "@/components/ui/separator";
 import { MeasureContributions } from "@/components/result/MeasureContributions";
+import { namesOf } from "@/lib/ui/humanize";
 
 const STEPS = [
   `Эффект меры умножается на (${HORIZON_QUARTERS} − лаг)/${HORIZON_QUARTERS}: за горизонт в ${HORIZON_QUARTERS} кварталов успевает сработать только эта доля.`,
@@ -39,7 +40,11 @@ export function HowCalculated({ run }: { run: Run }) {
         <section className="flex flex-col gap-4">
           <h3 className="text-sm font-medium">Вклад мер</h3>
           <p className="text-xs text-muted-foreground">Насколько упадёт Score, если убрать меру из набора.</p>
-          <MeasureContributions contributions={engine.contributions} decisions={run.scenario.decisions} />
+          <MeasureContributions
+            contributions={engine.contributions}
+            decisions={run.scenario.decisions}
+            names={namesOf(run.sandbox?.dataset)}
+          />
           {engine.synergies.length > 0 && (
             <>
               <Separator />

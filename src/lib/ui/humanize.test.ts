@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import sample from "../../../fixtures/sample-run.json";
 import type { Run } from "@/lib/types";
-import { humanizeChange, humanizeRun, humanizeText } from "./humanize";
+import { DEFAULT_DATASET } from "@/lib/dataset";
+import { humanizeChange, humanizeRun, humanizeText, namesOf } from "./humanize";
 
 const CODE = /\bM(1[0-4]|[1-9])\b/;
 
@@ -39,5 +40,12 @@ describe("humanize", () => {
     );
     expect(run.engine.score).toBe(56.54);
     expect(CODE.test(run.resolution.mandates[0].improvement.change)).toBe(false);
+  });
+  it("uses the sandbox dataset's own titles instead of case names", () => {
+    const ds = { ...DEFAULT_DATASET, name: "Мой город", measures: DEFAULT_DATASET.measures.map((m) => (m.id === "M5" ? { ...m, title: "Новая котельная" } : m)) };
+    const names = namesOf(ds);
+    expect(names.M5).toBe("Новая котельная");
+    expect(humanizeText("M5 даёт тепло", names)).toBe("«Новая котельная» даёт тепло");
+    expect(namesOf(DEFAULT_DATASET).M5).toBe("чистое топливо");
   });
 });

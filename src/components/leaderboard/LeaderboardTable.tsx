@@ -55,8 +55,8 @@ export function LeaderboardTable({ runs: all }: { runs: RunSummary[] }) {
             </tr>
           </thead>
           <tbody>
-            {runs.map((run, i) => (
-              <LeaderboardRow key={run.id} run={run} rank={i + 1} />
+            {runs.map((run) => (
+              <LeaderboardRow key={run.id} run={run} rank={runs.findIndex((r) => r.score === run.score) + 1} />
             ))}
           </tbody>
         </table>
