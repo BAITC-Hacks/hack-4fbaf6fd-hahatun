@@ -58,6 +58,7 @@ test.describe("Аким на 5 часов — приёмка", () => {
     expect(run.ok()).toBeTruthy();
     const body = await run.json();
     expect(body.engine.score).toBeCloseTo(56.54, 2);
+    if (body.llmEnabled) await expect(page.getByRole("button", { name: "Озвучить резолюцию" })).toBeVisible();
     expect(body.opinions).toHaveLength(6);
     expect(body.reviews.length).toBeGreaterThanOrEqual(1);
     expect(["approve", "approve_with_conditions", "return"]).toContain(body.resolution.outcome);
