@@ -32,9 +32,22 @@ export function QuarterSlider({ quarter, score, nCrit, onChange }: QuarterSlider
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full accent-primary"
       />
+      {/* Quiet scale under the track: which notch is which quarter. */}
+      <div aria-hidden="true" className="flex justify-between px-1 font-mono text-[0.7rem] text-muted-foreground tabular-nums">
+        {Array.from({ length: HORIZON_QUARTERS + 1 }, (_, q) => (
+          <span key={q} className={q === quarter ? "font-medium text-foreground" : undefined}>
+            {q}
+          </span>
+        ))}
+      </div>
       <p className="text-sm tabular-nums">
         Score к кварталу {quarter}: {formatScore(score)}
-        {nCrit > 0 && <span className="ml-2 text-xs text-muted-foreground">{nCrit} {critWord(nCrit)}</span>}
+        {nCrit > 0 && (
+          <span className="text-xs text-muted-foreground">
+            {" · "}
+            {nCrit} {critWord(nCrit)}
+          </span>
+        )}
       </p>
     </div>
   );
