@@ -24,6 +24,8 @@ export interface LiveRun {
   reviews: Review[];
   resolution?: Resolution;
   runId?: string;
+  /** id assigned by the server at start; lets the client fetch the run after an SSE drop */
+  startedId?: string;
   error?: string;
 }
 
@@ -32,7 +34,7 @@ export const EMPTY_LIVE_RUN: LiveRun = { stages: {}, facts: [], opinions: [], dr
 export function reduceLiveRun(state: LiveRun, event: ConsiliumEvent): LiveRun {
   switch (event.type) {
     case "stage":
-      return { ...state, stages: { ...state.stages, [event.stage]: event.status } };
+      return { ...state, stages: { ...state.stages, [event.stage]: event.status }, startedId: event.runId ?? state.startedId };
     case "engine":
       return { ...state, engine: event.result, facts: event.facts };
     case "optimizer":
@@ -75,18 +77,46 @@ export function parseSse(buffer: string): { events: ConsiliumEvent[]; rest: stri
   return { events, rest };
 }
 
+/** HTTP-level failure of POST /api/run; `status` 0 means the network request itself failed. */
+export class RunRequestError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+  }
+}
+
+async function readErrorMessage(res: Response): Promise<string> {
+  try {
+    const body = (await res.json()) as { error?: unknown; message?: unknown };
+    const text = body.error ?? body.message;
+    if (typeof text === "string" && text.trim()) return text;
+  } catch {
+    // non-JSON body
+  }
+  return `Консилиум не запустился: HTTP ${res.status}`;
+}
+
 /** POST /api/run and yield events as they arrive (EventSource cannot POST). */
 export async function* streamRun(
   body: { teamName: string; scenario: Scenario },
   signal?: AbortSignal,
 ): AsyncGenerator<ConsiliumEvent> {
-  const res = await fetch("/api/run", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
-    body: JSON.stringify(body),
-    signal,
-  });
-  if (!res.ok || !res.body) throw new Error(`Консилиум не запустился: HTTP ${res.status}`);
+  let res: Response;
+  try {
+    res = await fetch("/api/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+      body: JSON.stringify(body),
+      signal,
+    });
+  } catch (err) {
+    if (signal?.aborted) throw err;
+    throw new RunRequestError("Сервер консилиума недоступен", 0);
+  }
+  if (!res.ok) throw new RunRequestError(await readErrorMessage(res), res.status);
+  if (!res.body) throw new RunRequestError("Сервер не вернул поток событий", res.status);
   const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
   let buffer = "";
   for (;;) {
@@ -96,4 +126,5 @@ export async function* streamRun(
     buffer = parsed.rest;
     yield* parsed.events;
   }
+  if (buffer.trim()) yield* parseSse(buffer + "\n\n").events;
 }

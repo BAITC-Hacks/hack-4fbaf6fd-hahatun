@@ -33,16 +33,19 @@ const errorMessage = (err: unknown) => (err instanceof Error ? err.message : Str
 
 class StageTracker {
   current: Stage = "validate";
-  constructor(private readonly emit: Emit) {}
+  constructor(
+    private readonly emit: Emit,
+    readonly runId: string,
+  ) {}
   start(stage: Stage, message?: string) {
     this.current = stage;
-    this.emit({ type: "stage", stage, status: "start", ...(message ? { message } : {}) });
+    this.emit({ type: "stage", stage, status: "start", runId: this.runId, ...(message ? { message } : {}) });
   }
   done(message?: string) {
-    this.emit({ type: "stage", stage: this.current, status: "done", ...(message ? { message } : {}) });
+    this.emit({ type: "stage", stage: this.current, status: "done", runId: this.runId, ...(message ? { message } : {}) });
   }
   error(message: string) {
-    this.emit({ type: "stage", stage: this.current, status: "error", message });
+    this.emit({ type: "stage", stage: this.current, status: "error", runId: this.runId, message });
   }
 }
 
@@ -94,7 +97,8 @@ async function reviseLoop(ctx: RevisionContext, usage: LlmUsage, emit: Emit, sta
 // Runs the whole consilium, streaming events. Returns the saved Run, or null on any failure (nothing is saved then).
 export async function runConsilium(input: ConsiliumInput, emit: Emit): Promise<Run | null> {
   const { teamName, scenario } = input;
-  const stages = new StageTracker(emit);
+  const runId = randomUUID();
+  const stages = new StageTracker(emit, runId);
 
   stages.start("validate");
   const validation = validate(scenario);
@@ -146,7 +150,7 @@ async function runStages(teamName: string, scenario: Scenario, emit: Emit, stage
 
   stages.start("persist");
   const run: Run = {
-    id: randomUUID(),
+    id: stages.runId,
     teamName,
     createdAt: new Date().toISOString(),
     scenario,
