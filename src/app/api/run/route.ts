@@ -40,14 +40,7 @@ function clientIp(request: Request): string {
 }
 
 export async function POST(request: Request) {
-  if (activeRuns >= MAX_ACTIVE_RUNS) {
-    return Response.json({ error: `Сейчас идёт ${activeRuns} прогона, попробуйте через минуту` }, { status: 429 });
-  }
-  const ip = clientIp(request);
-  const last = lastStartByIp.get(ip) ?? 0;
-  if (Date.now() - last < MIN_INTERVAL_MS) {
-    return Response.json({ error: "Слишком часто: подождите несколько секунд перед новым прогоном" }, { status: 429 });
-  }
+  // Validate first: a malformed request is a 400 regardless of load; limits only guard real run starts.
   let json: unknown;
   try {
     json = await request.json();
@@ -57,6 +50,14 @@ export async function POST(request: Request) {
   const parsed = bodySchema.safeParse(json);
   if (!parsed.success) {
     return Response.json({ error: "invalid body", issues: z.flattenError(parsed.error) }, { status: 400 });
+  }
+  if (activeRuns >= MAX_ACTIVE_RUNS) {
+    return Response.json({ error: `Сейчас идёт ${activeRuns} прогона, попробуйте через минуту` }, { status: 429 });
+  }
+  const ip = clientIp(request);
+  const last = lastStartByIp.get(ip) ?? 0;
+  if (Date.now() - last < MIN_INTERVAL_MS) {
+    return Response.json({ error: "Слишком часто: подождите несколько секунд перед новым прогоном" }, { status: 429 });
   }
   const { teamName } = parsed.data;
   const scenario = parsed.data.scenario as Scenario;
