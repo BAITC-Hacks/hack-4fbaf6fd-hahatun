@@ -8,7 +8,7 @@
 | Tailwind 4 + shadcn/ui (preset base-nova), lucide-react | UI-кит, единственный |
 | Recharts 3 | radar до/после, бары вкладов |
 | Vercel AI SDK 7 `ai` + `@ai-sdk/openai` 4, zod 4 | вызовы OpenAI со structured output (`generateObject`) |
-| Drizzle ORM 0.45 + better-sqlite3 13 | хранение прогонов `Run`, файл `data/app.db` |
+| JSON-файлы в `data/runs/` | хранение прогонов `Run` (SQLite вырезан ради времени) |
 | Vitest 5 (+ vite как peer) | тесты движка и валидатора |
 | Docker (один сервис) | воспроизводимость для жюри |
 
